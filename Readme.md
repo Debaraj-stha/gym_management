@@ -1,3 +1,4 @@
+
 # Gym Management Software
 
 Gym Management Software is a desktop application developed using Python's Tkinter framework. It allows gym administrators to manage their gym's operations such as tracking members, managing attendance, handling billing, and scheduling classes. The software also includes a theme-switching feature, enabling users to switch between light and dark modes.
@@ -11,7 +12,7 @@ Gym Management Software is a desktop application developed using Python's Tkinte
 - **Class Scheduling**: Schedule gym classes and manage bookings.
 - **Theme Support**: Switch between light and dark themes (Forest Light and Forest Dark themes).
 - **Customization**: Settings page to update background color, language, and other preferences.
-- **Localization**: support for localization of Nepal,Espain,France,English and Hindi.
+- **Localization**: Support for localization in Nepali, Spanish, French, English, and Hindi.
 
 ## Screenshots
 
@@ -36,7 +37,22 @@ Gym Management Software is a desktop application developed using Python's Tkinte
    cd gym-management
    ```
 
-2. **Set up the environment**:
+2. **Set up the virtual environment**:
+
+   - Create a virtual environment:
+     ```bash
+     python -m venv venv
+     ```
+
+   - Activate the virtual environment:
+     - On Windows:
+       ```bash
+       venv\Scripts\activate
+       ```
+     - On macOS/Linux:
+       ```bash
+       source venv/bin/activate
+       ```
 
    - Install the required dependencies using pip:
      ```bash
