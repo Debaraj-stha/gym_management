@@ -7,16 +7,19 @@ def createButton(
     text,
     height=0,
     width=0,
-    command=lambda x: print("clicked"),
+    command=lambda: print("clicked"),
     relief: Literal["flat", "groove", "raised", "ridge", "solid", "sunken"] = "groove",
     borderwidth=1,
     highlightthickness=1,
     fontfamily="Arial",
     fontsize=12,
+    image=None,
+    state="normal",
 ):
     button = Button(
         frame,
         text=text,
+        image=image,
         height=height,
         width=width,
         command=command,
@@ -26,6 +29,8 @@ def createButton(
         relief=relief,
         borderwidth=borderwidth,
         highlightthickness=highlightthickness,
+        compound="left",
+        state=state,
     )
     return button
 
@@ -33,10 +38,9 @@ def createButton(
 def createLabel(
     frame,
     text,
-    bg,
     fontfamily="Arial",
     fontsize=12,
-    fg="#111",
+    fg="#000",
 ):
-    label = Label(frame, text=text, font=(fontfamily, fontsize), fg=fg, bg=bg)
+    label = Label(frame, text=text, font=(fontfamily, fontsize), fg=fg)
     return label

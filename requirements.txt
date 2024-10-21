@@ -2,3 +2,4 @@ tkinter                  # For GUI components (standard with Python)
 pillow                   # For handling images
 sqlite3                  # For database (standard with Python)
 python-dotenv             #for storing environment variables
+matplotlib #for visualization

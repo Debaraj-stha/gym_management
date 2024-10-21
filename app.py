@@ -42,7 +42,7 @@ class GymManagementApp(tk.Tk):
 
         # Create a container for the main content
         container = ttk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
+        container.pack(side="top", fill="both", expand=True, padx=10, pady=10)
 
         # Configure row/column to expand
         container.grid_rowconfigure(0, weight=1)
