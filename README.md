@@ -1,103 +1,82 @@
 # Gym Management Software
 
-This is a Gym Management System developed using Python and Tkinter. The application is designed to manage members, track attendance, handle membership billing, schedule gym classes, and generate reports.
+Gym Management Software is a desktop application developed using Python's Tkinter framework. It allows gym administrators to manage their gym's operations such as tracking members, managing attendance, handling billing, and scheduling classes. The software also includes a theme-switching feature, enabling users to switch between light and dark modes.
 
 ## Features
 
 - **Member Management**: Add, update, and remove gym members.
-- **Attendance Tracking**: Record daily attendance of members.
-- **Membership Plans**: Manage different membership plans (monthly, yearly, etc.).
-- **Billing and Payments**: Generate invoices and track payments.
-- **Class Scheduling**: Manage fitness class schedules and attendance.
-- **Reports**: Generate reports related to memberships, attendance, and payments.
-- **Localization**: Multilingual support (English, Spanish).
+- **Attendance Tracking**: Track member attendance and generate reports.
+- **Billing System**: Manage membership fees, payments, and generate bills.
+- **Class Scheduling**: Schedule gym classes and manage bookings.
+- **Theme Support**: Switch between light and dark themes (Forest Light and Forest Dark themes).
+- **Customization**: Settings page to update background color, language, and other preferences.
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard Screenshot](screenshots/dashboard.png)
+
+### Member Management
+
+![Members Screenshot](screenshots/members.png)
+
+### Attendance Tracking
+
+![Attendance Screenshot](screenshots/attendance.png)
 
 ## Installation
 
-1. Clone the repository:
+1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/yourusername/gym-management.git
-   cd gym-management
-
-    Set up a virtual environment:
-
-        On Windows:
-
-        bash
+   git clone https://github.com/Debaraj-stha/gym_management.git
+   cd gym-management-software
    ```
 
-python -m venv venv
-venv\Scripts\activate
+2. **Set up the environment**:
 
-On macOS/Linux:
+   - Install the required dependencies using pip:
+     ```bash
+     pip install -r requirements.txt
+     ```
 
-bash
+3. **Set up environment variables**:
 
-    python3 -m venv venv
-    source venv/bin/activate
+   - Create a `.env` file in the root directory with the following contents:
+     ```
+     THEME=forest-dark
+     BACKGROUND_COLOR=#d4d4d4
+     LANGUAGE=en
+     ```
 
-Install dependencies:
+4. **Run the application**:
+   ```bash
+   python app.py
+   ```
 
-bash
+## Usage
 
-pip install -r requirements.txt
+- Use the **Dashboard** to get an overview of the gym’s performance.
+- **Manage members** by adding, editing, and deleting member records.
+- Track **attendance** of members and generate reports for review.
+- Handle **billing** and membership payments through the billing section.
+- **Schedule classes** for different workouts and manage bookings.
+- Switch between **light** and **dark** themes using the theme switch buttons at the top of the application.
 
-Run the application:
+## Customization
 
-bash
+### Themes
 
-python app.py
+- You can customize the themes by modifying or adding `.tcl` files in the `theme` directory.
+- The default themes are **forest-dark** and **forest-light**.
 
-When finished, deactivate the virtual environment:
+### Environment Variables
 
-bash
+- **THEME**: Sets the initial theme of the application.
+- **BACKGROUND_COLOR**: Sets the background color of the application.
+- **LANGUAGE**: Set the language for localization.
 
-    deactivate
+## License
 
-Folder Structure
-
-    app.py: Main entry point of the application.
-    views/: Contains views for different sections of the gym management system (e.g., member management, attendance).
-    files/: Functional modules like member management, billing, and attendance.
-    utils/: Utility functions like database connections and data validation.
-    config/: Configuration files (e.g., for database settings).
-    database/: Contains the SQLite database file.
-    locales/: Localization files for multilingual support.
-    assets/: Static assets (e.g., images, icons).
-    resources/: Resource files like styles and fonts.
-
-Dependencies
-
-    Tkinter: For GUI components.
-    SQLite3: For database management.
-    Babel: For localization.
-    Pillow: For image handling.
-
-Install these dependencies using pip install:
-
-bash
-
-pip install tkinter pillow babel
-
-Usage
-
-    Member Management: Use the "Members" section to add, update, or remove members. This includes basic details like name, contact information, and membership plan.
-
-    Attendance: Use the "Attendance" section to mark members’ attendance for the day.
-
-    Billing: Go to the "Billing" section to generate invoices, record payments, and manage outstanding balances.
-
-    Class Scheduling: The "Class Schedule" section allows you to add, update, and remove fitness classes, and track members attending these classes.
-
-    Reports: Generate reports on active memberships, attendance, payments, and more.
-
-License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-yaml
-
----
-
-By using a virtual environment, you ensure that your project's dependencies are isolated
+This project is licensed under the MIT License.
