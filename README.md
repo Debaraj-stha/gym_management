@@ -7,9 +7,11 @@ Gym Management Software is a desktop application developed using Python's Tkinte
 - **Member Management**: Add, update, and remove gym members.
 - **Attendance Tracking**: Track member attendance and generate reports.
 - **Billing System**: Manage membership fees, payments, and generate bills.
+- **Report**: Reporting of member subscription expiration.
 - **Class Scheduling**: Schedule gym classes and manage bookings.
 - **Theme Support**: Switch between light and dark themes (Forest Light and Forest Dark themes).
 - **Customization**: Settings page to update background color, language, and other preferences.
+- **Localization**: support for localization of Nepal,Espain,France,English and Hindi.
 
 ## Screenshots
 
@@ -31,7 +33,7 @@ Gym Management Software is a desktop application developed using Python's Tkinte
 
    ```bash
    git clone https://github.com/Debaraj-stha/gym_management.git
-   cd gym-management-software
+   cd gym-management
    ```
 
 2. **Set up the environment**:
