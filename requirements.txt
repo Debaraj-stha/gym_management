@@ -1,0 +1,3 @@
+tkinter                  # For GUI components (standard with Python)
+pillow                   # For handling images
+sqlite3                  # For database (standard with Python)
