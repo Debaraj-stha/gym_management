@@ -1,18 +1,25 @@
 import tkinter as tk
 from tkinter import ttk
+from dotenv import load_dotenv
+import os
+
+
 from utils.environment_file import get_env, set_env
 from views.dashboard import Dashboard
 from views.member_view import MembersView
 from views.attendance_view import AttendanceView
 from views.billing_view import BillingView
 from views.class_schedule_view import ClassScheduleView
-from dotenv import load_dotenv
-import os
+
+from utils.logger import logger
+from utils.database import Database
 
 
 class GymManagementApp(tk.Tk):
     def __init__(self):
         super().__init__()
+        self.db = Database()
+        logger.debug("Initializing software")
         # loading environment file
         load_dotenv()
         # App configuration
@@ -32,6 +39,12 @@ class GymManagementApp(tk.Tk):
             theme_path = os.path.join(os.getcwd(), f"theme/{self.theme}.tcl")
         self.tk.call("source", theme_path)
         self.style.theme_use(self.theme)
+        self.style.configure("Treeview", font="20")
+        self.style.configure(
+            "Treeview.Heading",
+            foreground="#111",
+            font="40",
+        )
 
         bg_key = "BACKGROUND_COLOR"
         bg = get_env(bg_key)
@@ -60,7 +73,7 @@ class GymManagementApp(tk.Tk):
             ClassScheduleView,
         ):
             page_name = F.__name__
-            frame = F(parent=container, controller=self)
+            frame = F(parent=container, controller=self, db=self.db)
             self.frames[page_name] = frame
 
             # Put all frames in the same location
@@ -76,13 +89,11 @@ class GymManagementApp(tk.Tk):
 
     def update_theme(self, theme):
         """Switch the application's theme."""
-        print(f"Theme changed to: {theme}")
-        print(self.style.theme_names())
 
         # Load the new theme if not already loaded
         theme_path = os.path.join(os.getcwd(), f"theme/{theme}.tcl")
         if theme not in self.style.theme_names():
-            print("Loading theme:", theme)
+
             self.tk.call("source", theme_path)
 
         # Apply the new theme
@@ -116,7 +127,12 @@ class GymManagementApp(tk.Tk):
             for child in widget.winfo_children():
                 self._reconfigure_widget(child)
 
+    def on_closing(self):
+        self.db.close()
+
 
 if __name__ == "__main__":
     app = GymManagementApp()
+
     app.mainloop()
+    app.on_closing()

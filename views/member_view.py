@@ -5,6 +5,7 @@ import os
 from tkinter.ttk import Style, Treeview
 from PIL import Image, ImageTk
 from utils.widgets import createButton, createLabel
+from files.add_member import AddMember
 
 members = [
     (
@@ -209,10 +210,11 @@ members = [
 
 
 class MembersView(tk.Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, db):
         super().__init__(parent)
         # initialization
         self.controller = controller
+        self.db = db
         self.limit = 2
         self.offset = 1
         self.current_page = 1
@@ -221,8 +223,8 @@ class MembersView(tk.Frame):
         self.has_prev = False
         self.has_next = False
         self.total_buttons = 1
-        self.config_row_column()
-        self.paginate()
+        self._config_row_column()
+        self._paginate()
 
         self.create_ui()
 
@@ -230,7 +232,7 @@ class MembersView(tk.Frame):
         # Add members table and search bar here
         image_path = os.path.join(os.getcwd(), "asset/arrow.png")
         image = Image.open(image_path)
-        print(image_path)
+
         image = image.resize((20, 20))
         self.arrow_photo = ImageTk.PhotoImage(image)
 
@@ -270,7 +272,10 @@ class MembersView(tk.Frame):
         self.to_date_entry.insert(0, "2020-09-01")
         self.to_date_entry.grid(row=2, column=6, sticky="ew", padx=(10, 0))
 
-        createButton(self, "Add member").grid(row=3, column=1, sticky="w")
+        # adding members
+        createButton(self, "Add member", command=lambda: AddMember(self.db)).grid(
+            row=3, column=1, sticky="w"
+        )
 
         tree_scroll = tk.Scrollbar(
             self,
@@ -317,6 +322,7 @@ class MembersView(tk.Frame):
                 background=[("selected", "green")],
                 foreground=[("selected", "white")],
             )
+
             self.treeview.grid(row=4, column=1, columnspan=7, sticky="nsew")
 
             # pagination button
@@ -344,7 +350,7 @@ class MembersView(tk.Frame):
 
         # Determine which buttons to display
         button_to_display = self.get_display_buttons(self.max_display_buttons)
-        self.create_buttons()
+        self._create_buttons()
 
         # Next button
         self.next_button = tk.Button(
@@ -355,7 +361,7 @@ class MembersView(tk.Frame):
         self.next_button.grid(row=0, column=len(button_to_display) + 2, padx=(5, 0))
         self._update_page_button_state()
 
-    def create_buttons(
+    def _create_buttons(
         self,
     ):
         button_to_display = self.get_display_buttons(self.max_display_buttons)
@@ -396,7 +402,7 @@ class MembersView(tk.Frame):
             # Show up to two pages before and after the current page
             start_page = max(2, self.current_page - 2)
             end_page = min(total_buttons - 1, self.current_page + 2)
-            print(start_page, end_page)
+
             pages.extend(range(start_page, end_page + 1))
 
             if self.current_page < total_buttons - 3:
@@ -426,15 +432,14 @@ class MembersView(tk.Frame):
 
         if self.total_buttons > 9:
             self.show_dots = True
-        print(self.has_next)
+
         self.prev_button_state = "disabled" if not self.has_prev else "active"
 
         self.next_button_state = "disabled" if not self.has_next else "active"
         self.prev_button.config(state=self.prev_button_state)
         self.next_button.config(state=self.next_button_state)
-        print(self.prev_button_state, self.next_button_state)
 
-    def paginate(self):
+    def _paginate(self):
         end = self.current_page * self.limit
         start = self.offset
 
@@ -447,11 +452,11 @@ class MembersView(tk.Frame):
         # destoying previuos button pagination
         self.sub_row.destroy()
         self._update_page_button_state()
-        self.create_buttons()
-        self.paginate()
-        self.update_table()
+        self._create_buttons()
+        self._paginate()
+        self._update_table()
 
-    def update_table(self):
+    def _update_table(self):
         self.treeview.delete(*self.treeview.get_children())
         for member in self.paginated_members:
             self.treeview.insert("", "end", values=member)
@@ -463,7 +468,7 @@ class MembersView(tk.Frame):
     def search(self, event):
         pass  # Implement search functionality here
 
-    def config_row_column(self):
+    def _config_row_column(self):
         for i in range(2, 10):
             self.grid_rowconfigure(i, weight=1)
         for i in range(1, 14):
