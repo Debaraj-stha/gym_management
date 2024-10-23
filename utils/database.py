@@ -73,10 +73,94 @@ class Database:
         """
 
         try:
-            self.cursor.execute("SELECT * FROM customers")
+            self.cursor.execute(
+                "SELECT * FROM customers WHERE customer_id=?", (customer_id,)
+            )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
+
+    def get_customers(self, limit: int = 10, offset: int = 1, **kwargs):
+        """
+        Returns all customers in the database, limited by the specified limit and offset.
+
+        Args:
+            limit (int, optional): The maximum number of customers to return. Defaults to 10.
+            offset (int, optional): The starting index of the customers to return. Defaults to 1.
+
+        Returns:
+            list: A list of customers.
+        """
+        try:
+            if "between" in kwargs:
+                column_name, from_date, to_date = kwargs["between"]
+                print(kwargs["between"])
+
+                # Split the date strings to detect their format
+                from_day_list = from_date.split("-")
+                to_date_list = to_date.split("-")
+                f_len = len(from_day_list)
+                t_len = len(to_date_list)
+
+                # Convert to year if a full date is given in from_date and only year is provided in to_date
+                if f_len > 1 and t_len == 1:
+                    # Extract only the year from from_date
+                    from_year = from_day_list[0]
+                    # Use only the year for comparison
+                    self.cursor.execute(
+                        f"SELECT * FROM customers WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? LIMIT ? OFFSET ?",
+                        (
+                            from_year,
+                            to_date,
+                            limit,
+                            offset,
+                        ),  # Compare only the year parts
+                    )
+                elif f_len == 1 and t_len > 1:
+                    # Extract only the year from to_date
+                    to_year = to_date_list[0]
+                    # Use only the year for comparison
+                    self.cursor.execute(
+                        f"SELECT * FROM customers WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? LIMIT ? OFFSET ?",
+                        (
+                            from_date,
+                            to_year,
+                            limit,
+                            offset,
+                        ),  # Compare only the year parts
+                    )
+                elif f_len == 1 or t_len == 1:
+                    # Both are year only
+                    self.cursor.execute(
+                        f"SELECT * FROM customers WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? LIMIT ? OFFSET ?",
+                        (from_date, to_date, limit, offset),
+                    )
+                elif f_len == 2 or t_len == 2:
+                    # Year and month comparison
+                    self.cursor.execute(
+                        f"SELECT * FROM customers WHERE strftime('%Y-%m', {column_name}) BETWEEN ? AND ?",
+                        (from_date, to_date),
+                    )
+                else:
+                    # Full date comparison
+                    self.cursor.execute(
+                        f"SELECT * FROM customers WHERE {column_name} BETWEEN ? AND ? LIMIT ? OFFSET ?",
+                        (from_date, to_date, limit, offset),
+                    )
+
+                res = self.cursor.fetchall()
+                print(res)
+                return res
+
+            # Fallback for fetching customers without a date filter
+            self.cursor.execute(
+                "SELECT * FROM customers LIMIT ? OFFSET ?", (limit, offset)
+            )
+            return self.cursor.fetchall()
+
+        except sqlite3.Error as e:
+            print(f"An error occurred: {e}")
+            return []
 
     def update_last_payment_date(self, customer_id: id, last_payment_date: datetime):
         """
@@ -233,20 +317,27 @@ class Database:
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
 
-    def search_customers(self, search_term: str):
+    def search_customers(
+        self,
+        search_term: str,
+        search_column: list = ["name", "email", "phone", "subscription_type"],
+    ):
         """
         Search for customers whose names or emails contain the given search term.
 
         Args:
             search_term (str): The search term to match.
+            search_column (list, optional): The columns to search in. Defaults to ["name", "email", "phone", "subscription_type"].
 
         Returns:
             list: A list of customers whose names or emails contain the search term.
         """
         try:
+            like_query = [f"{col} LIKE ?" for col in search_column]
+            like_clause = " OR ".join(like_query)
             self.cursor.execute(
-                "SELECT * FROM customers WHERE name LIKE? OR email LIKE?",
-                ("%" + search_term + "%", "%" + search_term + "%"),
+                f"SELECT * FROM customers WHERE {like_clause}",
+                [f"%{search_term}%"] * len(search_column),
             )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
@@ -288,5 +379,21 @@ class Database:
                 (min_amount, max_amount),
             )
             return self.cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"An error occurred: {e}")
+
+    def insert_multiple_amounts(self, customers: list):
+        """
+        Inserts multiple customer records into the database.
+
+        Args:
+            customers (list): A list of customer tuple, where each tuple contains customer details.
+        """
+        try:
+            self.cursor.executemany(
+                "INSERT INTO customers (name, email, membership_expiry, last_payment_date, total_amount_paid, subscription_type, subscription_price, subscription_date) VALUES (?,?,?,?,?,?,?,?)",
+                customers,
+            )
+            self.conn.commit()
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")

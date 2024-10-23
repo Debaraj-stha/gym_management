@@ -1,4 +1,4 @@
-from random import randint
+from datetime import date, datetime
 
 import tkinter as tk
 import os
@@ -6,211 +6,12 @@ from tkinter.ttk import Style, Treeview
 from PIL import Image, ImageTk
 from utils.widgets import createButton, createLabel
 from files.add_member import AddMember
-
-members = [
-    (
-        2,
-        "Jane Smith",
-        "jane.smith@example.com",
-        "234-567-8901",
-        "Annual",
-        "Inactive",
-        "2022-06-15",
-    ),
-    (
-        3,
-        "Mike Johnson",
-        "mike.johnson@example.com",
-        "345-678-9012",
-        "Monthly",
-        "Active",
-        "2023-03-22",
-    ),
-    (
-        4,
-        "Emily Davis",
-        "emily.davis@example.com",
-        "456-789-0123",
-        "Annual",
-        "Active",
-        "2021-11-05",
-    ),
-    (
-        5,
-        "Chris Brown",
-        "chris.brown@example.com",
-        "567-890-1234",
-        "Monthly",
-        "Inactive",
-        "2022-12-10",
-    ),
-    (
-        6,
-        "Katie Wilson",
-        "katie.wilson@example.com",
-        "678-901-2345",
-        "Annual",
-        "Active",
-        "2020-09-12",
-    ),
-    (
-        7,
-        "David Miller",
-        "david.miller@example.com",
-        "789-012-3456",
-        "Monthly",
-        "Inactive",
-        "2023-08-01",
-    ),
-    (
-        8,
-        "Sarah Lee",
-        "sarah.lee@example.com",
-        "890-123-4567",
-        "Monthly",
-        "Active",
-        "2023-05-18",
-    ),
-    (
-        9,
-        "Daniel Moore",
-        "daniel.moore@example.com",
-        "901-234-5678",
-        "Annual",
-        "Active",
-        "2022-02-20",
-    ),
-    (
-        10,
-        "Laura White",
-        "laura.white@example.com",
-        "012-345-6789",
-        "Monthly",
-        "Inactive",
-        "2023-07-30",
-    ),
-    (
-        11,
-        "James Black",
-        "james.black@example.com",
-        "123-456-7890",
-        "Annual",
-        "Active",
-        "2023-04-10",
-    ),
-    (
-        12,
-        "Sophia Green",
-        "sophia.green@example.com",
-        "234-567-8901",
-        "Monthly",
-        "Inactive",
-        "2021-10-25",
-    ),
-    (
-        13,
-        "Andrew King",
-        "andrew.king@example.com",
-        "345-678-9012",
-        "Monthly",
-        "Active",
-        "2023-09-17",
-    ),
-    (
-        2,
-        "Jane Smith",
-        "jane.smith@example.com",
-        "234-567-8901",
-        "Annual",
-        "Inactive",
-        "2022-06-15",
-    ),
-    (
-        3,
-        "Mike Johnson",
-        "mike.johnson@example.com",
-        "345-678-9012",
-        "Monthly",
-        "Active",
-        "2023-03-22",
-    ),
-    (
-        4,
-        "Emily Davis",
-        "emily.davis@example.com",
-        "456-789-0123",
-        "Annual",
-        "Active",
-        "2021-11-05",
-    ),
-    (
-        14,
-        "Olivia Hall",
-        "olivia.hall@example.com",
-        "456-789-0123",
-        "Annual",
-        "Active",
-        "2022-01-08",
-    ),
-    (
-        15,
-        "Matthew Scott",
-        "matthew.scott@example.com",
-        "567-890-1234",
-        "Monthly",
-        "Inactive",
-        "2020-12-14",
-    ),
-    (
-        16,
-        "Ava Young",
-        "ava.young@example.com",
-        "678-901-2345",
-        "Annual",
-        "Active",
-        "2023-06-02",
-    ),
-    (
-        17,
-        "Michael Adams",
-        "michael.adams@example.com",
-        "789-012-3456",
-        "Monthly",
-        "Active",
-        "2021-03-29",
-    ),
-    (
-        18,
-        "Ella Collins",
-        "ella.collins@example.com",
-        "890-123-4567",
-        "Annual",
-        "Inactive",
-        "2023-09-12",
-    ),
-    (
-        19,
-        "Liam Turner",
-        "liam.turner@example.com",
-        "901-234-5678",
-        "Monthly",
-        "Active",
-        "2023-11-03",
-    ),
-    (
-        20,
-        "Charlotte Lewis",
-        "charlotte.lewis@example.com",
-        "012-345-6789",
-        "Annual",
-        "Active",
-        "2020-05-20",
-    ),
-]
+from utils.helper import focusIn, focusOut
 
 
 class MembersView(tk.Frame):
     def __init__(self, parent, controller, db):
+        print(datetime.now())
         super().__init__(parent)
         # initialization
         self.controller = controller
@@ -254,11 +55,13 @@ class MembersView(tk.Frame):
 
         self.search_entry.grid(row=2, column=1, sticky="ew", padx=(10, 0))
         self.search_entry.insert(0, "Search Members...")
-        self.search_entry.bind(
-            "<FocusIn>", lambda event: self.search_entry.delete(0, "end")
-        )
 
-        self.search_entry.bind("<FocusOut>", lambda event: self.insert_placeholder())
+        # registering events
+        self.search_entry.bind("<FocusIn>", lambda event: focusIn(event))
+
+        self.search_entry.bind(
+            "<FocusOut>", lambda event: focusOut(event, "Search Members...")
+        )
 
         self.search_entry.bind("<KeyRelease>", self.search)
 
@@ -272,25 +75,50 @@ class MembersView(tk.Frame):
         self.to_date_entry.insert(0, "2020-09-01")
         self.to_date_entry.grid(row=2, column=6, sticky="ew", padx=(10, 0))
 
-        # adding members
-        createButton(self, "Add member", command=lambda: AddMember(self.db)).grid(
-            row=3, column=1, sticky="w"
+        # adding  events to date entry
+        self.to_date_entry.bind("<FocusIn>", lambda event: focusIn(event))
+        self.from_date_entry.bind("<FocusIn>", lambda event: focusIn(event))
+        self.to_date_entry.bind(
+            "<FocusOut>", lambda event: focusOut(event, "2020-09-01")
         )
+        self.from_date_entry.bind(
+            "<FocusOut>", lambda event: focusOut(event, "2020-09-01")
+        )
+
+        self.to_date_entry.bind(
+            "<KeyRelease>", lambda event: self._get_customer_between(event)
+        )
+        self.from_date_entry.bind(
+            "<KeyRelease>", lambda event: self._get_customer_between(event)
+        )
+
+        # adding members
+        createButton(
+            self, "Add member", command=lambda: AddMember(self.db), state="active"
+        ).grid(row=3, column=1, sticky="w")
 
         tree_scroll = tk.Scrollbar(
             self,
             orient="vertical",
         )
+        tree_scroll_horizontal = tk.Scrollbar(self, orient="horizontal")
+
         tree_scroll.grid(row=4, column=8, sticky="ns")
+
         columns = [
             "Id",
             "Name",
             "Email",
             "Phone",
             "Subscription",
+            "Subscription Date",
+            "membership_expiry",
+            "subscription_price",
+            "total_amount_paid",
+            "last_payment_date",
             "Status",
-            "Activation Date",
         ]
+
         # Add members table here
         self.treeview = Treeview(
             self,
@@ -298,45 +126,40 @@ class MembersView(tk.Frame):
             columns=columns,
             show="headings",
             yscrollcommand=tree_scroll.set,
+            xscrollcommand=tree_scroll_horizontal.set,
         )
-        self.treeview.heading("Id", text="Id", anchor="center")
-        self.treeview.heading("Name", text="Name", anchor="center")
-        self.treeview.heading("Email", text="Email", anchor="center")
-        self.treeview.heading("Phone", text="Phone", anchor="center")
 
-        self.treeview.heading("Subscription", text="Subscription", anchor="center")
-
-        self.treeview.heading("Status", text="Status", anchor="center")
-        self.treeview.heading(
-            "Activation Date", text="Activation date", anchor="center"
-        )
         for col in columns:
-            self.treeview.column(col, anchor="center")  # Center the content
+            self.treeview.heading(f"{col}", text=f"{col}", anchor="center")
+            self.treeview.column(col, anchor="center", width=150)  # Center the content
 
         for member in self.paginated_members:
             self.treeview.insert("", "end", values=member)
-            tree_scroll.config(command=self.treeview.yview)
-            style = Style()
-            style.map(
-                "Treeview",
-                background=[("selected", "green")],
-                foreground=[("selected", "white")],
-            )
+        tree_scroll.config(command=self.treeview.yview)
+        tree_scroll_horizontal.config(command=self.treeview.xview)
 
-            self.treeview.grid(row=4, column=1, columnspan=7, sticky="nsew")
+        style = Style()
+        style.map(
+            "Treeview",
+            background=[("selected", "green")],
+            foreground=[("selected", "white")],
+        )
 
-            # pagination button
-            self.create_page_numbers()
+        self.treeview.grid(row=4, column=1, columnspan=7, sticky="nsew")
+        tree_scroll_horizontal.grid(row=5, column=1, columnspan=7, sticky="ew")
+
+        # pagination button
+        self.create_page_numbers()
 
     def create_page_numbers(self):
-        total_records = len(members)
+        total_records = self.db.total_customers()
         self.total_buttons = total_records // self.limit
         if total_records % self.limit != 0:
             self.total_buttons += 1
 
         self.max_display_buttons = 7  # Show up to 7 buttons with dots
         self.row_frame = tk.Frame(self)
-        self.row_frame.grid(row=5, column=1, sticky="ew")
+        self.row_frame.grid(row=6, column=1, sticky="ew")
 
         createLabel(self.row_frame, text="Page:").grid(row=0, column=0, sticky="ew")
 
@@ -443,7 +266,7 @@ class MembersView(tk.Frame):
         end = self.current_page * self.limit
         start = self.offset
 
-        self.paginated_members = members[start:end]
+        self.paginated_members = self.db.get_customers(self.limit, self.offset)
 
     def change_page(self, page):
         self.current_page = page
@@ -466,10 +289,34 @@ class MembersView(tk.Frame):
             self.search_entry.insert(0, "Search Members...")
 
     def search(self, event):
-        pass  # Implement search functionality here
+        search_term = self.search_entry.get()
+
+        if search_term.strip() != "":
+
+            self.paginated_members = self.db.search_customers(search_term)
+            self._update_table()
+        else:
+            self.paginated_members = self.db.get_customers(self.limit, self.offset)
+        self._update_table()
+
+    def _update_table(self):
+        self.treeview.delete(*self.treeview.get_children())
+        for member in self.paginated_members:
+            self.treeview.insert("", "end", values=member)
 
     def _config_row_column(self):
         for i in range(2, 10):
             self.grid_rowconfigure(i, weight=1)
         for i in range(1, 14):
             self.grid_columnconfigure(i, weight=1)
+
+    def _get_customer_between(self, event):
+        if event.keycode == 36:
+            self.current_page = 1
+            self.offset = 1
+            to_date = self.to_date_entry.get()
+            from_date = self.from_date_entry.get()
+            between = ("subscription_date", from_date, to_date)
+
+            self.paginated_members = self.db.get_customers(between=between)
+            self._update_table()
