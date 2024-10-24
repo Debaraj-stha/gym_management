@@ -2,11 +2,14 @@ from datetime import date, datetime
 
 import tkinter as tk
 import os
+from tkinter import IntVar, ttk
 from tkinter.ttk import Style, Treeview
 from PIL import Image, ImageTk
 from utils.widgets import createButton, createLabel
 from files.add_member import AddMember
 from utils.helper import focusIn, focusOut
+
+days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 
 class MembersView(tk.Frame):
@@ -19,6 +22,8 @@ class MembersView(tk.Frame):
         self.limit = 2
         self.offset = 1
         self.current_page = 1
+        self.total_records = self.db.total_customers()
+        self.db.delete_customer(1)
         self.paginated_members = []
         self.show_dots = False
         self.has_prev = False
@@ -31,6 +36,15 @@ class MembersView(tk.Frame):
 
     def create_ui(self):
         # Add members table and search bar here
+        toolrow = tk.Frame(self)
+        toolrow.grid(row=1, column=1, sticky="ew", pady=(10, 0))
+        toolrow.grid_rowconfigure(0, weight=1)
+        toolrow.grid_rowconfigure(1, weight=1)
+        toolrow.grid_columnconfigure(2, weight=1)
+        toolrow.grid_columnconfigure(0, weight=1)
+        toolrow.grid_columnconfigure(1, weight=3)
+        toolrow.grid_columnconfigure(2, weight=1)
+
         image_path = os.path.join(os.getcwd(), "asset/arrow.png")
         image = Image.open(image_path)
 
@@ -38,14 +52,16 @@ class MembersView(tk.Frame):
         self.arrow_photo = ImageTk.PhotoImage(image)
 
         createButton(
-            self,
+            toolrow,
             text="Back",
             image=self.arrow_photo,
             command=lambda: self.controller.show_frame("Dashboard"),
-        ).grid(row=1, column=0, sticky="ew")
+        ).grid(row=0, column=0, sticky="ew")
+
+        # toolbar rows
 
         self.search_entry = tk.Entry(
-            self,
+            toolrow,
             cursor="hand2",
             font=("Arial", 12),
             relief="groove",
@@ -53,7 +69,7 @@ class MembersView(tk.Frame):
             fg="#000000",
         )
 
-        self.search_entry.grid(row=2, column=1, sticky="ew", padx=(10, 0))
+        self.search_entry.grid(row=1, column=1, sticky="ew", padx=(10, 0))
         self.search_entry.insert(0, "Search Members...")
 
         # registering events
@@ -65,15 +81,15 @@ class MembersView(tk.Frame):
 
         self.search_entry.bind("<KeyRelease>", self.search)
 
-        createLabel(self, "From:").grid(row=2, column=3, sticky="ew")
-        self.from_date_entry = tk.Entry(self)
+        createLabel(toolrow, "From:").grid(row=1, column=3, sticky="ew")
+        self.from_date_entry = tk.Entry(toolrow)
         self.from_date_entry.insert(0, "2020-09-01")
-        self.from_date_entry.grid(row=2, column=4, sticky="ew", padx=(10, 0))
+        self.from_date_entry.grid(row=1, column=4, sticky="ew", padx=(10, 0))
 
-        createLabel(self, "To:").grid(row=2, column=5, sticky="ew")
-        self.to_date_entry = tk.Entry(self)
+        createLabel(toolrow, "To:").grid(row=1, column=5, sticky="ew")
+        self.to_date_entry = tk.Entry(toolrow)
         self.to_date_entry.insert(0, "2020-09-01")
-        self.to_date_entry.grid(row=2, column=6, sticky="ew", padx=(10, 0))
+        self.to_date_entry.grid(row=1, column=6, sticky="ew", padx=(10, 0))
 
         # adding  events to date entry
         self.to_date_entry.bind("<FocusIn>", lambda event: focusIn(event))
@@ -92,10 +108,28 @@ class MembersView(tk.Frame):
             "<KeyRelease>", lambda event: self._get_customer_between(event)
         )
 
+        createLabel(toolrow, "Membership is expiring on:").grid(
+            row=1,
+            column=7,
+            sticky="ew",
+        )
+        self.days_before_expiry_entry = ttk.Combobox(toolrow, values=days)
+        self.days_before_expiry_entry.current(0)
+        self.days_before_expiry_entry.grid(row=1, column=8, sticky="ew")
+        createLabel(toolrow, "Get pending payment customers:").grid(
+            row=2, column=1, sticky="w"
+        )
+        self.get_pending_customer_var = IntVar()
+        ttk.Checkbutton(
+            toolrow,
+            command=self._get_pending_customer,
+            variable=self.get_pending_customer_var,
+        ).grid(row=2, column=2, sticky="w")
+
         # adding members
         createButton(
             self, "Add member", command=lambda: AddMember(self.db), state="active"
-        ).grid(row=3, column=1, sticky="w")
+        ).grid(row=2, column=1, sticky="w")
 
         tree_scroll = tk.Scrollbar(
             self,
@@ -103,7 +137,7 @@ class MembersView(tk.Frame):
         )
         tree_scroll_horizontal = tk.Scrollbar(self, orient="horizontal")
 
-        tree_scroll.grid(row=4, column=8, sticky="ns")
+        tree_scroll.grid(row=3, column=8, sticky="ns")
 
         columns = [
             "Id",
@@ -145,18 +179,38 @@ class MembersView(tk.Frame):
             foreground=[("selected", "white")],
         )
 
-        self.treeview.grid(row=4, column=1, columnspan=7, sticky="nsew")
-        tree_scroll_horizontal.grid(row=5, column=1, columnspan=7, sticky="ew")
+        self.treeview.grid(row=3, column=1, columnspan=7, sticky="nsew")
+        tree_scroll_horizontal.grid(row=4, column=1, columnspan=7, sticky="ew")
 
         # pagination button
         self.create_page_numbers()
 
     def create_page_numbers(self):
-        total_records = self.db.total_customers()
-        self.total_buttons = total_records // self.limit
-        if total_records % self.limit != 0:
+        self.total_buttons = self.total_records // self.limit
+
+        # Check if there are remaining records for an extra page
+        if self.total_records % self.limit != 0:
             self.total_buttons += 1
 
+        print("Total records:", self.total_records)
+        print("Total buttons before condition:", self.total_buttons)
+
+        # If only one page, disable pagination buttons
+        if self.total_records <= self.limit:
+            print("Disabling buttons for single page")
+            self.next_button.config(state="disabled")
+            self.prev_button.config(state="disabled")
+            self.total_buttons = 1
+        else:
+            pass
+
+        print("Total buttons after condition:", self.total_buttons)
+
+        # Don't show pagination buttons if there's only one page
+        if self.total_buttons == 1:
+            return  # No need to create pagination buttons for just one page
+
+        # Handle pagination button creation
         self.max_display_buttons = 7  # Show up to 7 buttons with dots
         self.row_frame = tk.Frame(self)
         self.row_frame.grid(row=6, column=1, sticky="ew")
@@ -281,8 +335,13 @@ class MembersView(tk.Frame):
 
     def _update_table(self):
         self.treeview.delete(*self.treeview.get_children())
-        for member in self.paginated_members:
-            self.treeview.insert("", "end", values=member)
+        if self.paginated_members:
+            for member in self.paginated_members:
+                self.treeview.insert("", "end", values=member)
+        else:
+            print("No members to display.")
+        # Force UI redraw if necessary
+        self.treeview.update_idletasks()
 
     def insert_placeholder(self):
         if self.search_entry.get() == "":
@@ -294,13 +353,14 @@ class MembersView(tk.Frame):
         if search_term.strip() != "":
 
             self.paginated_members = self.db.search_customers(search_term)
-            self._update_table()
+
         else:
             self.paginated_members = self.db.get_customers(self.limit, self.offset)
         self._update_table()
 
     def _update_table(self):
         self.treeview.delete(*self.treeview.get_children())
+        self.update_idletasks()
         for member in self.paginated_members:
             self.treeview.insert("", "end", values=member)
 
@@ -319,4 +379,19 @@ class MembersView(tk.Frame):
             between = ("subscription_date", from_date, to_date)
 
             self.paginated_members = self.db.get_customers(between=between)
+            self._update_table()
+
+    def _get_pending_customer(self):
+        state = self.get_pending_customer_var.get()
+
+        if state:
+            self.total_records = self.db.count_pending_payment_customers()
+
+            print("totyal", self.total_records)
+            self.create_page_numbers()
+            res = self.db.get_customer_by_pending_payment(self.limit, self.offset)
+            [print(res)]
+
+            self.paginated_members = res
+
             self._update_table()

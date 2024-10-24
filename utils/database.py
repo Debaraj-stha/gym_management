@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime, timedelta
+from venv import logger
 
 
 class Database:
@@ -46,7 +47,7 @@ class Database:
             self.conn.commit()
             return self.cursor.lastrowid
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def total_customers(self):
         """
@@ -58,7 +59,7 @@ class Database:
             self.cursor.execute("SELECT COUNT(*) FROM customers")
             return self.cursor.fetchone()[0]
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def get_customer(self, customer_id: int):
         """
@@ -78,7 +79,7 @@ class Database:
             )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def get_customers(self, limit: int = 10, offset: int = 1, **kwargs):
         """
@@ -94,7 +95,7 @@ class Database:
         try:
             if "between" in kwargs:
                 column_name, from_date, to_date = kwargs["between"]
-                print(kwargs["between"])
+                logger.info(kwargs["between"])
 
                 # Split the date strings to detect their format
                 from_day_list = from_date.split("-")
@@ -149,7 +150,7 @@ class Database:
                     )
 
                 res = self.cursor.fetchall()
-                print(res)
+                logger.info(res)
                 return res
 
             # Fallback for fetching customers without a date filter
@@ -159,7 +160,7 @@ class Database:
             return self.cursor.fetchall()
 
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
             return []
 
     def update_last_payment_date(self, customer_id: id, last_payment_date: datetime):
@@ -177,7 +178,7 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def get_customers_by_membership_expiry(self, days_before_expiry: int):
         """
@@ -192,12 +193,18 @@ class Database:
         try:
             today = datetime.now().date()
             expiry_date = today + timedelta(days=days_before_expiry)
+            fetch_total_expiring_customer = self.cursor.execute(
+                "SELECT COUNT(*) FROM customers WHERE membership_expiry<=",
+                (expiry_date),
+            )
+            total_expiring_customer = fetch_total_expiring_customer.fetchone()[0]
+
             self.cursor.execute(
                 "SELECT * FROM customers WHERE membership_expiry <=?", (expiry_date,)
             )
-            return self.cursor.fetchall()
+            return self.cursor.fetchall(), total_expiring_customer
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def update_membership_expiry(self, customer_id: int, new_expiry_date: datetime):
         """
@@ -214,7 +221,7 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def update_total_amount_paid(self, customer_id: int, new_total_amount_paid: float):
         """
@@ -231,7 +238,7 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def get_customer_by_email(self, email):
         """
@@ -247,7 +254,7 @@ class Database:
             self.cursor.execute("SELECT * FROM customers WHERE email=?", (email,))
             return self.cursor.fetchone()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def update_subscription_type(self, customer_id: int, new_subscription_type: str):
         """
@@ -264,7 +271,7 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def update_subscription_price(
         self, customer_id: int, new_subscription_price: float
@@ -283,7 +290,7 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def update_subscription_date(
         self, customer_id: int, new_subscription_date: datetime
@@ -302,7 +309,7 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def delete_customer(self, customer_id: int):
         """
@@ -315,7 +322,7 @@ class Database:
             self.cursor.execute("DELETE FROM customers WHERE id=?", (customer_id,))
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def search_customers(
         self,
@@ -341,7 +348,7 @@ class Database:
             )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def get_customers_by_subscription_type(self, subscription_type: str):
         """
@@ -360,7 +367,7 @@ class Database:
             )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def get_customers_by_total_amount_paid(self, min_amount: float, max_amount: float):
         """
@@ -380,7 +387,7 @@ class Database:
             )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
 
     def insert_multiple_amounts(self, customers: list):
         """
@@ -396,4 +403,34 @@ class Database:
             )
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logger.info(f"An error occurred: {e}")
+
+    def get_customer_by_pending_payment(self, limit, offset):
+        """
+        Returns all customers whose total amount paid is less than their subscription price.
+
+        Returns:
+            list: A list of customers whose total amount paid is less than their subscription price.
+        """
+        try:
+            self.cursor.execute(
+                "SELECT * FROM customers WHERE total_amount_paid < subscription_price LIMIT ? OFFSET ?",
+                (limit, offset),
+            )
+            return self.cursor.fetchall()
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred: {e}")
+            logger.info(f"An error occurred while querying the database: {e}")
+
+    def count_pending_payment_customers(self):
+        """
+        Returns the total number of customers whose total amount paid is less than their subscription price.
+        """
+        try:
+            self.cursor.execute(
+                "SELECT COUNT(*) FROM customers WHERE total_amount_paid < subscription_price"
+            )
+            return self.cursor.fetchone()[0]
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred: {e}")
+            logger.info(f"An error occurred while querying the database: {e}")
