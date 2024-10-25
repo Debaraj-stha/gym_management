@@ -1,10 +1,13 @@
-from datetime import date, datetime
+from datetime import datetime
 
 import tkinter as tk
 import os
 from tkinter import IntVar, ttk
 from tkinter.ttk import Style, Treeview
 from PIL import Image, ImageTk
+from tkinter import messagebox
+
+from files.update_member import UpdateMember
 from utils.widgets import createButton, createLabel
 from files.add_member import AddMember
 from utils.helper import focusIn, focusOut
@@ -20,10 +23,10 @@ class MembersView(tk.Frame):
         self.controller = controller
         self.db = db
         self.limit = 2
-        self.offset = 1
+        self.offset = 0
         self.current_page = 1
         self.total_records = self.db.total_customers()
-        self.db.delete_customer(1)
+        print(self.total_records)
         self.paginated_members = []
         self.show_dots = False
         self.has_prev = False
@@ -151,6 +154,7 @@ class MembersView(tk.Frame):
             "total_amount_paid",
             "last_payment_date",
             "Status",
+            "Action",
         ]
 
         # Add members table here
@@ -169,6 +173,7 @@ class MembersView(tk.Frame):
 
         for member in self.paginated_members:
             self.treeview.insert("", "end", values=member)
+
         tree_scroll.config(command=self.treeview.yview)
         tree_scroll_horizontal.config(command=self.treeview.xview)
 
@@ -181,36 +186,55 @@ class MembersView(tk.Frame):
 
         self.treeview.grid(row=3, column=1, columnspan=7, sticky="nsew")
         tree_scroll_horizontal.grid(row=4, column=1, columnspan=7, sticky="ew")
+        self.treeview.bind("<Double-Button-1>", self._delete_record)
+        self.treeview.bind("<Button-1>", self._edit_record)
 
         # pagination button
         self.create_page_numbers()
 
-    def create_page_numbers(self):
-        self.total_buttons = self.total_records // self.limit
+    def _edit_record(self, event):
 
-        # Check if there are remaining records for an extra page
-        if self.total_records % self.limit != 0:
+        item = self.treeview.selection()
+
+        if item:
+
+            record = self.treeview.item(item[0], "values")
+            clicked_column = self.treeview.identify_column(event.x)
+            id = record[0]
+            column_index = int(clicked_column.split("#")[1])
+            print(id)
+            print(f"column index:{column_index}")
+            if id is None:
+                print("id is nnone")
+                return
+            old_value = record[column_index - 1]
+            if column_index == 5:
+
+                UpdateMember(self.db, id, column_index, old_value)
+
+                print("subscription type")
+            elif column_index == 9:
+                # old_value = record[8]
+                print(f"old_value:{old_value}")
+                UpdateMember(self.db, id, column_index, old_value)
+                print("total amount paid")
+
+            print(clicked_column)
+
+    def _delete_record(self, event):
+        conf = messagebox.askyesno("Conform", "Are you sure you want to delete?")
+        if conf:
+            item = self.treeview.selection()[0]
+            self.db.delete_customer(self.treeview.item(item, "values")[0])
+            self._paginate()
+        print(conf)
+
+    def create_page_numbers(self):
+        total_records = self.db.total_customers()
+        self.total_buttons = total_records // self.limit
+        if total_records % self.limit != 0:
             self.total_buttons += 1
 
-        print("Total records:", self.total_records)
-        print("Total buttons before condition:", self.total_buttons)
-
-        # If only one page, disable pagination buttons
-        if self.total_records <= self.limit:
-            print("Disabling buttons for single page")
-            self.next_button.config(state="disabled")
-            self.prev_button.config(state="disabled")
-            self.total_buttons = 1
-        else:
-            pass
-
-        print("Total buttons after condition:", self.total_buttons)
-
-        # Don't show pagination buttons if there's only one page
-        if self.total_buttons == 1:
-            return  # No need to create pagination buttons for just one page
-
-        # Handle pagination button creation
         self.max_display_buttons = 7  # Show up to 7 buttons with dots
         self.row_frame = tk.Frame(self)
         self.row_frame.grid(row=6, column=1, sticky="ew")
@@ -319,8 +343,9 @@ class MembersView(tk.Frame):
     def _paginate(self):
         end = self.current_page * self.limit
         start = self.offset
-
+        print(self.limit, self.offset)
         self.paginated_members = self.db.get_customers(self.limit, self.offset)
+        print(self.paginated_members)
 
     def change_page(self, page):
         self.current_page = page
@@ -387,7 +412,6 @@ class MembersView(tk.Frame):
         if state:
             self.total_records = self.db.count_pending_payment_customers()
 
-            print("totyal", self.total_records)
             self.create_page_numbers()
             res = self.db.get_customer_by_pending_payment(self.limit, self.offset)
             [print(res)]

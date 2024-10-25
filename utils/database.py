@@ -223,7 +223,9 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def update_total_amount_paid(self, customer_id: int, new_total_amount_paid: float):
+    def update_total_amount_paid(
+        self, customer_id: int, new_total_amount_paid: float, paid_date=datetime
+    ):
         """
         Update the total amount paid of a customer.
 
@@ -270,8 +272,10 @@ class Database:
                 (new_subscription_type, customer_id),
             )
             self.conn.commit()
+            return True
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            return False
 
     def update_subscription_price(
         self, customer_id: int, new_subscription_price: float
@@ -398,7 +402,7 @@ class Database:
         """
         try:
             self.cursor.executemany(
-                "INSERT INTO customers (name, email, membership_expiry, last_payment_date, total_amount_paid, subscription_type, subscription_price, subscription_date) VALUES (?,?,?,?,?,?,?,?)",
+                "INSERT INTO customers (name, email, membership_expiry, last_payment_date, total_amount_paid, subscription_type, subscription_price, subscription_date,last_payment_date) VALUES (?,?,?,?,?,?,?,?,?)",
                 customers,
             )
             self.conn.commit()

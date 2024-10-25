@@ -8,8 +8,9 @@ from pyparsing import col
 
 from utils.helper import focusIn, focusOut
 from utils.widgets import createButton, createLabel
+from resources.data import subscription_value
 
-subscription_value = ["Annual", "Monthly"]
+
 fees = {"Annual": 13000, "Monthly": 1200}
 
 
@@ -179,6 +180,7 @@ class AddMember(tk.Toplevel):
             membership_expiry = datetime.now() + timedelta(days=30)
         else:
             membership_expiry = datetime.now() + timedelta(days=365)
+        amount_paid_date = datetime.now()
         customer = (
             name,
             email,
@@ -186,6 +188,7 @@ class AddMember(tk.Toplevel):
             subscription,
             membership_expiry,
             total_amount,
+            amount_paid,
             amount_paid,
         )
         self.db.insert(customer)
