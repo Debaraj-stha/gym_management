@@ -2,29 +2,53 @@ import sqlite3
 from datetime import datetime, timedelta
 from venv import logger
 
+from utils.helper import send_email
+
 
 class Database:
     def __init__(self):
-        self.conn = sqlite3.connect("my_db.db")
+        self.conn = sqlite3.connect("my_db.db", timeout=5)
+
         self.cursor = self.conn.cursor()
+
+        # try:
+        #     self.cursor.execute(
+        #         """ALTER TABLE customers ADD COLUMN is_membership_expired INTEGER default 0"""
+        #     )
+        #     self.conn.commit()
+        # except sqlite3.Error as e:
+        #     print("An error occurred:", e)
         self._create_db()
 
     def _create_db(self):
         self.cursor.execute(
             """CREATE TABLE IF NOT EXISTS customers (
-                            id INTEGER PRIMARY KEY,
-                            name TEXT NOT NULL,
-                            email TEXT UNIQUE NOT NULL,
-                            phone TEXT NOT NULL,
-                            subscription_type TEXT NOT NULL,
-                            subscription_date DATE DEFAULT(datetime('now', 'utc')),
-                            membership_expiry DATE NOT NULL,
-                            subscription_price REAL NOT NULL,
-                            total_amount_paid REAL DEFAULT 0,
-                            last_payment_date DATE DEFAULT NULL
-                            
-                        )"""
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                phone TEXT NOT NULL,
+                subscription_type TEXT NOT NULL,
+                subscription_date DATE DEFAULT(datetime('now', 'utc')),
+                membership_expiry DATE NOT NULL,
+                subscription_price REAL NOT NULL,
+                total_amount_paid REAL DEFAULT 0,
+                last_payment_date DATE DEFAULT NULL
+            )"""
         )
+
+        self.conn.commit()
+
+        # Corrected CREATE TABLE statement for attendance
+        self.cursor.execute(
+            """CREATE TABLE IF NOT EXISTS attendance (
+                id INTEGER PRIMARY KEY,
+                check_in DATE DEFAULT(datetime('now', 'utc')),
+                checkout DATE DEFAULT NULL,
+                customer_id INTEGER,
+                FOREIGN KEY (customer_id) REFERENCES customers(id)
+            )"""
+        )
+
         self.conn.commit()
 
     def close(self):
@@ -81,7 +105,7 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def get_customers(self, limit: int = 10, offset: int = 1, **kwargs):
+    def get_customers(self, columns="*", limit: int = 10, offset: int = 0, **kwargs):
         """
         Returns all customers in the database, limited by the specified limit and offset.
 
@@ -154,10 +178,13 @@ class Database:
                 return res
 
             # Fallback for fetching customers without a date filter
-            self.cursor.execute(
-                "SELECT * FROM customers LIMIT ? OFFSET ?", (limit, offset)
-            )
+            query = f"SELECT {columns} FROM customers LIMIT? OFFSET?"
+            self.cursor.execute(query, (limit, offset))
             return self.cursor.fetchall()
+            # # self.cursor.execute(
+            # #     "SELECT * FROM customers LIMIT ? OFFSET ?", (limit, offset)
+            # # )
+            # return self.cursor.fetchall()
 
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
@@ -437,4 +464,72 @@ class Database:
             return self.cursor.fetchone()[0]
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            logger.info(f"An error occurred while querying the database: {e}")
+
+    def update_membership_expired(self, **kwargs):
+        """
+        # Update membership_expiry of custome
+        Args:
+            membership_expiry (datetime): New membership expiry date.
+            id (int): ID of the customer to update.
+        """
+
+        try:
+            today = datetime.date()
+            self.cursor.execute(
+                "UPDATE customers SET is_membership_expired =? WHERE id =? AND strftime('%Y-%m-%d',membership_expiry)==? ",
+                (kwargs["is_membership_expired"], kwargs["id"], today),
+            )
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred: {e}")
+            return False
+
+    def update_email_sent(self, new_status: list, id: list, previous_status: list):
+        """
+        # Update is_email_sent of customer
+        Args:
+            new_status (list): New status of email sent.
+            id (list): ID of the customer to update.
+            previous_status (list): Previous status of email sent.
+        Returns:
+        bool: True if update is successful, False otherwise.
+        """
+        try:
+            date_to_update = [
+                (new_status[i], id[i], previous_status[i])
+                for i in range(len(new_status))
+            ]
+            self.cursor.executemany(
+                "UPDATE customers SET is_email_sent =? WHERE id =? AND is_email_sent=?",
+                (date_to_update),
+            )
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred: {e}")
+            return False
+
+    def send_membership_expiring_message(self, daye_before: int):
+        try:
+            expiring_customers = self.get_customers_by_membership_expiry(daye_before)
+            to = []
+            id = []
+            if expiring_customers is None:
+                return
+            for customer in expiring_customers:
+                to.append(customer[2])
+                id.append(customer[0])
+            subject = "Membership expiring"
+            body = f"""Membership of {customer[1]} is expiring in {daye_before} days.
+            Please renew  your membership before expiring.Thank you for your membership.
+            """
+            send_email(to, subject, body)
+            new_status = [1] * len(to)
+            previous_status = [0] * len(to)
+
+            self.update_email_sent(new_status, id, previous_status)
+
+        except sqlite3.Error as e:
             logger.info(f"An error occurred while querying the database: {e}")

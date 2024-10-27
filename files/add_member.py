@@ -189,7 +189,7 @@ class AddMember(tk.Toplevel):
             membership_expiry,
             total_amount,
             amount_paid,
-            amount_paid,
+            amount_paid_date,
         )
         self.db.insert(customer)
 

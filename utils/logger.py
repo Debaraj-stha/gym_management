@@ -5,5 +5,5 @@ logging.basicConfig(
     filename="debug.log",
     level=logging.DEBUG,
     datefmt="%Y-%m-%d %H:%M:%s",
-    format="%(asctime)s %(levelname)s %(funcName)s %(message)s %(lineno)d %(module)s",
+    format="%(asctime)s %(levelname)s  %(message)s  ",
 )

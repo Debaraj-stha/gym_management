@@ -2,36 +2,41 @@ from datetime import datetime
 
 import tkinter as tk
 import os
-from tkinter import IntVar, ttk
+from tkinter import Frame, IntVar, ttk
 from tkinter.ttk import Style, Treeview
 from PIL import Image, ImageTk
 from tkinter import messagebox
 
 from files.update_member import UpdateMember
-from utils.widgets import createButton, createLabel
+from utils.widgets import (
+    backButton,
+    create_buttons,
+    create_page_numbers,
+    createButton,
+    createLabel,
+)
 from files.add_member import AddMember
-from utils.helper import focusIn, focusOut
+from utils.helper import focusIn, focusOut, send_email
 
 days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 
 class MembersView(tk.Frame):
     def __init__(self, parent, controller, db):
-        print(datetime.now())
         super().__init__(parent)
         # initialization
         self.controller = controller
         self.db = db
-        self.limit = 2
+        self.limit = 1
         self.offset = 0
         self.current_page = 1
         self.total_records = self.db.total_customers()
-        print(self.total_records)
         self.paginated_members = []
         self.show_dots = False
         self.has_prev = False
         self.has_next = False
         self.total_buttons = 1
+        self.db.send_membership_expiring_message(26)
         self._config_row_column()
         self._paginate()
 
@@ -48,18 +53,7 @@ class MembersView(tk.Frame):
         toolrow.grid_columnconfigure(1, weight=3)
         toolrow.grid_columnconfigure(2, weight=1)
 
-        image_path = os.path.join(os.getcwd(), "asset/arrow.png")
-        image = Image.open(image_path)
-
-        image = image.resize((20, 20))
-        self.arrow_photo = ImageTk.PhotoImage(image)
-
-        createButton(
-            toolrow,
-            text="Back",
-            image=self.arrow_photo,
-            command=lambda: self.controller.show_frame("Dashboard"),
-        ).grid(row=0, column=0, sticky="ew")
+        backButton(self, self.controller)  ##back button
 
         # toolbar rows
 
@@ -188,9 +182,14 @@ class MembersView(tk.Frame):
         tree_scroll_horizontal.grid(row=4, column=1, columnspan=7, sticky="ew")
         self.treeview.bind("<Double-Button-1>", self._delete_record)
         self.treeview.bind("<Button-1>", self._edit_record)
-
+        self.row_frame = tk.Frame(self)
+        self.row_frame.grid(row=6, column=1, sticky="ew")
         # pagination button
-        self.create_page_numbers()
+        self.sub_row, self.total_buttons, self.prev_button, self.next_button = (
+            create_page_numbers(
+                self.total_records, self.row_frame, self.change_page, limit=self.limit
+            )
+        )
 
     def _edit_record(self, event):
 
@@ -202,24 +201,18 @@ class MembersView(tk.Frame):
             clicked_column = self.treeview.identify_column(event.x)
             id = record[0]
             column_index = int(clicked_column.split("#")[1])
-            print(id)
-            print(f"column index:{column_index}")
+
             if id is None:
-                print("id is nnone")
+
                 return
             old_value = record[column_index - 1]
             if column_index == 5:
 
                 UpdateMember(self.db, id, column_index, old_value)
 
-                print("subscription type")
             elif column_index == 9:
                 # old_value = record[8]
-                print(f"old_value:{old_value}")
                 UpdateMember(self.db, id, column_index, old_value)
-                print("total amount paid")
-
-            print(clicked_column)
 
     def _delete_record(self, event):
         conf = messagebox.askyesno("Conform", "Are you sure you want to delete?")
@@ -227,91 +220,6 @@ class MembersView(tk.Frame):
             item = self.treeview.selection()[0]
             self.db.delete_customer(self.treeview.item(item, "values")[0])
             self._paginate()
-        print(conf)
-
-    def create_page_numbers(self):
-        total_records = self.db.total_customers()
-        self.total_buttons = total_records // self.limit
-        if total_records % self.limit != 0:
-            self.total_buttons += 1
-
-        self.max_display_buttons = 7  # Show up to 7 buttons with dots
-        self.row_frame = tk.Frame(self)
-        self.row_frame.grid(row=6, column=1, sticky="ew")
-
-        createLabel(self.row_frame, text="Page:").grid(row=0, column=0, sticky="ew")
-
-        # Previous button
-        self.prev_button = tk.Button(
-            self.row_frame,
-            text="Prev",
-            command=self.prev_page,
-        )
-        self.prev_button.grid(row=0, column=1, padx=(5, 0))
-
-        # Determine which buttons to display
-        button_to_display = self.get_display_buttons(self.max_display_buttons)
-        self._create_buttons()
-
-        # Next button
-        self.next_button = tk.Button(
-            self.row_frame,
-            text="Next",
-            command=self.next_page,
-        )
-        self.next_button.grid(row=0, column=len(button_to_display) + 2, padx=(5, 0))
-        self._update_page_button_state()
-
-    def _create_buttons(
-        self,
-    ):
-        button_to_display = self.get_display_buttons(self.max_display_buttons)
-        self.sub_row = tk.Frame(self.row_frame)
-        self.sub_row.grid(row=0, column=2, sticky="ew")
-        # Display page buttons
-        for i, page in enumerate(button_to_display):
-            if page == "...":
-                createLabel(self.sub_row, text="...").grid(
-                    row=0, column=i + 2, padx=(5, 0)
-                )
-            else:
-                button = createButton(
-                    self.sub_row,
-                    text=f"{page}",
-                    state="active" if page == self.current_page else "normal",
-                )
-                button.grid(row=0, column=i + 2, padx=(5, 0))
-                button.bind(
-                    "<Button-1>",
-                    lambda event, page=page: self.change_page(page),
-                )
-
-    def get_display_buttons(self, max_display_buttons):
-        """Returns a list of page numbers (with ellipses) to display."""
-        pages = []
-        total_buttons = self.total_buttons
-
-        # Always show the first and last page
-        if total_buttons <= max_display_buttons:
-            pages = list(range(1, total_buttons + 1))
-        else:
-            pages = [1]
-
-            if self.current_page > 4:
-                pages.append("...")
-
-            # Show up to two pages before and after the current page
-            start_page = max(2, self.current_page - 2)
-            end_page = min(total_buttons - 1, self.current_page + 2)
-
-            pages.extend(range(start_page, end_page + 1))
-
-            if self.current_page < total_buttons - 3:
-                pages.append("...")
-
-            pages.append(total_buttons)
-
-        return pages
 
     def prev_page(self):
         if self.current_page > 1:
@@ -343,9 +251,7 @@ class MembersView(tk.Frame):
     def _paginate(self):
         end = self.current_page * self.limit
         start = self.offset
-        print(self.limit, self.offset)
         self.paginated_members = self.db.get_customers(self.limit, self.offset)
-        print(self.paginated_members)
 
     def change_page(self, page):
         self.current_page = page
@@ -354,7 +260,9 @@ class MembersView(tk.Frame):
         # destoying previuos button pagination
         self.sub_row.destroy()
         self._update_page_button_state()
-        self._create_buttons()
+        create_buttons(
+            self.row_frame, self.current_page, self.total_buttons, self.change_page
+        )
         self._paginate()
         self._update_table()
 
@@ -364,7 +272,7 @@ class MembersView(tk.Frame):
             for member in self.paginated_members:
                 self.treeview.insert("", "end", values=member)
         else:
-            print("No members to display.")
+            pass
         # Force UI redraw if necessary
         self.treeview.update_idletasks()
 
@@ -382,12 +290,6 @@ class MembersView(tk.Frame):
         else:
             self.paginated_members = self.db.get_customers(self.limit, self.offset)
         self._update_table()
-
-    def _update_table(self):
-        self.treeview.delete(*self.treeview.get_children())
-        self.update_idletasks()
-        for member in self.paginated_members:
-            self.treeview.insert("", "end", values=member)
 
     def _config_row_column(self):
         for i in range(2, 10):
@@ -414,7 +316,6 @@ class MembersView(tk.Frame):
 
             self.create_page_numbers()
             res = self.db.get_customer_by_pending_payment(self.limit, self.offset)
-            [print(res)]
 
             self.paginated_members = res
 
