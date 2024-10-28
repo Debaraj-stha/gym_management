@@ -11,13 +11,6 @@ class Database:
 
         self.cursor = self.conn.cursor()
 
-        # try:
-        #     self.cursor.execute(
-        #         """ALTER TABLE customers ADD COLUMN is_membership_expired INTEGER default 0"""
-        #     )
-        #     self.conn.commit()
-        # except sqlite3.Error as e:
-        #     print("An error occurred:", e)
         self._create_db()
 
     def _create_db(self):
@@ -38,7 +31,6 @@ class Database:
 
         self.conn.commit()
 
-        # Corrected CREATE TABLE statement for attendance
         self.cursor.execute(
             """CREATE TABLE IF NOT EXISTS attendance (
                 id INTEGER PRIMARY KEY,
@@ -54,60 +46,95 @@ class Database:
     def close(self):
         self.conn.close()
 
-    def insert(self, customer):
+    def insert(
+        self,
+        values: tuple,
+        columns_name: list,
+        table_name: str = "customers",
+    ):
         """
         Add a new customer to the database.
 
         Args:
-            customer (tuple): A tuple containing the customer's details: (name, email, phone, subscription_type, membership_expiry, subscription_price,total_amount_paid).
+            values (tuple): A tuple containing the customer's details: (name, email, phone, subscription_type, membership_expiry, subscription_price,total_amount_paid).
+            columns_name (list): A list of column names in the database.
+            table_name (str): The name of the table.Default is customers.
         Returns:
             int: The ID of the inserted customer if successful, None otherwise.
         """
         try:
+            col = ",".join(columns_name)
+            placeholder = ",".join(["?"] * len(columns_name))
             self.cursor.execute(
-                """INSERT INTO customers (name, email, phone, subscription_type, membership_expiry, subscription_price,total_amount_paid,last_payment_date) VALUES (?,?,?,?,?,?,?,?)""",
-                customer,
+                f"""INSERT INTO {table_name} ({col}) VALUES ({placeholder})""",
+                values,
             )
             self.conn.commit()
             return self.cursor.lastrowid
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def total_customers(self):
+    def total_records(self, table_name="customers"):
         """
         Count the number of customers
+        Args:
+            table_name (str): The name of the table. Default is customers.
         Returns:
             int: total customers
         """
         try:
-            self.cursor.execute("SELECT COUNT(*) FROM customers")
+            self.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
             return self.cursor.fetchone()[0]
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def get_customer(self, customer_id: int):
+    def get_specific(
+        self,
+        where: tuple,
+        value: tuple,
+        columns_name: tuple = ("*"),
+        table_name="customers",
+        is_date_field=True,
+    ):
         """
-        Returns the customer with the given ID.
+        Returns specific rows from the given table based on provided conditions.
 
         Args:
-            customer_id (int): The ID of the customer to retrieve.
+            where (tuple): Column names to use in the WHERE clause.
+            value (tuple): Values to match for the WHERE clause.
+            columns_name (tuple): Columns to retrieve from the table.
+            table_name (str): Name of the table to query.
+            is_date_field (bool): Placeholder, not used in this query.
 
-        Returns all customers in the database.
-
-
+        Returns:
+            list: The rows that match the query.
         """
 
         try:
-            self.cursor.execute(
-                "SELECT * FROM customers WHERE customer_id=?", (customer_id,)
-            )
+
+            col = ",".join(columns_name) if columns_name != ("*",) else "*"
+
+            where_clause = " AND ".join(f"{col}=?" for col in where)
+
+            query = f"SELECT {col} FROM {table_name} WHERE {where_clause}"
+            self.cursor.execute(query, value)
+
             return self.cursor.fetchall()
+
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            return []
 
-    def get_customers(self, columns="*", limit: int = 10, offset: int = 0, **kwargs):
+    def get_customers(
+        self,
+        columns: list = "*",
+        limit: int = 10,
+        offset: int = 0,
+        table_name="customers",
+        **kwargs,
+    ):
         """
-        ### Returns all customers in the database, limited by the specified limit and offset.
+
 
         Args:
             columns (str,optional): The columns to retrieve customers from. If not provided, all customers will be returned from the database.
@@ -119,57 +146,54 @@ class Database:
             list: A list of customers.
         """
         try:
-            # Setup for optional ordering
+
             order_clause = ""
             if "order_by" in kwargs and "sort_order" in kwargs:
                 order_by = kwargs["order_by"]
                 sort_order = kwargs["sort_order"]
                 order_clause = f"ORDER BY {order_by} {sort_order}"
 
-            # If a date filter is specified
             if "between" in kwargs:
                 column_name, from_date, to_date = kwargs["between"]
 
-                # Date format checks
                 from_day_list = from_date.split("-")
                 to_date_list = to_date.split("-")
                 f_len = len(from_day_list)
                 t_len = len(to_date_list)
 
-                # Apply different queries based on date format
-                if f_len > 1 and t_len == 1:  # Year for to_date only
+                if f_len > 1 and t_len == 1:
                     from_year = from_day_list[0]
                     query = f"""
-                        SELECT {columns} FROM customers 
+                        SELECT {columns} FROM {table_name} 
                         WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? 
                         {order_clause} LIMIT ? OFFSET ?
                     """
                     self.cursor.execute(query, (from_year, to_date, limit, offset))
-                elif f_len == 1 and t_len > 1:  # Year for from_date only
+                elif f_len == 1 and t_len > 1:
                     to_year = to_date_list[0]
                     query = f"""
-                        SELECT {columns} FROM customers 
+                        SELECT {columns} FROM {table_name} 
                         WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? 
                         {order_clause} LIMIT ? OFFSET ?
                     """
                     self.cursor.execute(query, (from_date, to_year, limit, offset))
-                elif f_len == 1 or t_len == 1:  # Both are year only
+                elif f_len == 1 or t_len == 1:
                     query = f"""
-                        SELECT {columns} FROM customers 
+                        SELECT {columns} FROM {table_name} 
                         WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? 
                         {order_clause} LIMIT ? OFFSET ?
                     """
                     self.cursor.execute(query, (from_date, to_date, limit, offset))
-                elif f_len == 2 or t_len == 2:  # Year and month
+                elif f_len == 2 or t_len == 2:
                     query = f"""
-                        SELECT {columns} FROM customers 
+                        SELECT {columns} FROM {table_name} 
                         WHERE strftime('%Y-%m', {column_name}) BETWEEN ? AND ? 
                         {order_clause} LIMIT ? OFFSET ?
                     """
                     self.cursor.execute(query, (from_date, to_date, limit, offset))
-                else:  # Full date comparison
+                else:
                     query = f"""
-                        SELECT {columns} FROM customers 
+                        SELECT {columns} FROM {table_name} 
                         WHERE {column_name} BETWEEN ? AND ? 
                         {order_clause} LIMIT ? OFFSET ?
                     """
@@ -177,8 +201,10 @@ class Database:
 
                 return self.cursor.fetchall()
 
-            # Default case without date filtering
-            query = f"SELECT {columns} FROM customers {order_clause} LIMIT ? OFFSET ?"
+            columns_name = "*"
+            if "*" not in columns:
+                columns_name = ",".join(columns)
+            query = f"SELECT {columns_name} FROM {table_name} {order_clause} LIMIT ? OFFSET ?"
             self.cursor.execute(query, (limit, offset))
             res = self.cursor.fetchall()
             return res
@@ -187,23 +213,6 @@ class Database:
             logger.info(f"An error occurred: {e}")
             print(e)
             return []
-
-    def update_last_payment_date(self, customer_id: id, last_payment_date: datetime):
-        """
-        Update the last payment date of a customer.
-
-        Args:
-            customer_id (int): The ID of the customer to update.
-            last_payment_date (datetime): The new last payment date.
-        """
-        try:
-            self.cursor.execute(
-                "UPDATE customers SET last_payment_date=? WHERE id=?",
-                (last_payment_date, customer_id),
-            )
-            self.conn.commit()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
 
     def get_customers_by_membership_expiry(self, days_before_expiry: int):
         """
@@ -231,42 +240,6 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def update_membership_expiry(self, customer_id: int, new_expiry_date: datetime):
-        """
-        Update the membership expiry date of a customer.
-
-        Args:
-            customer_id (int): The ID of the customer to update.
-            new_expiry_date (datetime): The new membership expiry date.
-        """
-        try:
-            self.cursor.execute(
-                "UPDATE customers SET membership_expiry=? WHERE id=?",
-                (new_expiry_date, customer_id),
-            )
-            self.conn.commit()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
-    def update_total_amount_paid(
-        self, customer_id: int, new_total_amount_paid: float, paid_date=datetime
-    ):
-        """
-        Update the total amount paid of a customer.
-
-        Args:
-            customer_id (int): The ID of the customer to update.
-            new_total_amount_paid (float): The new total amount paid.
-        """
-        try:
-            self.cursor.execute(
-                "UPDATE customers SET total_amount_paid=? WHERE id=?",
-                (new_total_amount_paid, customer_id),
-            )
-            self.conn.commit()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
     def get_customer_by_email(self, email):
         """
         Returns the customer with the given email.
@@ -280,76 +253,6 @@ class Database:
         try:
             self.cursor.execute("SELECT * FROM customers WHERE email=?", (email,))
             return self.cursor.fetchone()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
-    def update_subscription_type(self, customer_id: int, new_subscription_type: str):
-        """
-        Update the subscription type of a customer.
-
-        Args:
-            customer_id (int): The ID of the customer to update.
-            new_subscription_type (str): The new subscription type.
-        """
-        try:
-            self.cursor.execute(
-                "UPDATE customers SET subscription_type=? WHERE id=?",
-                (new_subscription_type, customer_id),
-            )
-            self.conn.commit()
-            return True
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-            return False
-
-    def update_subscription_price(
-        self, customer_id: int, new_subscription_price: float
-    ):
-        """
-        Update the subscription price of a customer.
-
-        Args:
-            customer_id (int): The ID of the customer to update.
-            new_subscription_price (float): The new subscription price.
-        """
-        try:
-            self.cursor.execute(
-                "UPDATE customers SET subscription_price=? WHERE id=?",
-                (new_subscription_price, customer_id),
-            )
-            self.conn.commit()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
-    def update_subscription_date(
-        self, customer_id: int, new_subscription_date: datetime
-    ):
-        """
-        Update the subscription date of a customer.
-
-        Args:
-            customer_id (int): The ID of the customer to update.
-            new_subscription_date (datetime): The new subscription date.
-        """
-        try:
-            self.cursor.execute(
-                "UPDATE customers SET subscription_date=? WHERE id=?",
-                (new_subscription_date, customer_id),
-            )
-            self.conn.commit()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
-    def delete_customer(self, customer_id: int):
-        """
-        Delete the customer with the given ID.
-
-        Args:
-            customer_id (int): The ID of the customer to delete.
-        """
-        try:
-            self.cursor.execute("DELETE FROM customers WHERE id=?", (customer_id,))
-            self.conn.commit()
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
@@ -379,46 +282,7 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def get_customers_by_subscription_type(self, subscription_type: str):
-        """
-        Returns all customers with the given subscription type.
-
-        Args:
-            subscription_type (str): The subscription type to retrieve.
-
-        Returns:
-            list: A list of customers with the given subscription type.
-        """
-        try:
-            self.cursor.execute(
-                "SELECT * FROM customers WHERE subscription_type=?",
-                (subscription_type,),
-            )
-            return self.cursor.fetchall()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
-    def get_customers_by_total_amount_paid(self, min_amount: float, max_amount: float):
-        """
-        Returns all customers whose total amount paid falls within the given range.
-
-        Args:
-            min_amount (float): The minimum total amount paid.
-            max_amount (float): The maximum total amount paid.
-
-        Returns:
-            list: A list of customers whose total amount paid falls within the given range.
-        """
-        try:
-            self.cursor.execute(
-                "SELECT * FROM customers WHERE total_amount_paid BETWEEN? AND?",
-                (min_amount, max_amount),
-            )
-            return self.cursor.fetchall()
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-
-    def insert_multiple_amounts(self, customers: list):
+    def insert_multiple(self, customers: list, table_name: str = "customers"):
         """
         Inserts multiple customer records into the database.
 
@@ -471,29 +335,9 @@ class Database:
             logger.info(f"An error occurred: {e}")
             logger.info(f"An error occurred while querying the database: {e}")
 
-    def update_membership_expired(self, **kwargs):
-        """
-        # Update membership_expiry of custome
-        Args:
-            membership_expiry (datetime): New membership expiry date.
-            id (int): ID of the customer to update.
-        """
-
-        try:
-            today = datetime.date()
-            self.cursor.execute(
-                "UPDATE customers SET is_membership_expired =? WHERE id =? AND strftime('%Y-%m-%d',membership_expiry)==? ",
-                (kwargs["is_membership_expired"], kwargs["id"], today),
-            )
-            self.conn.commit()
-            return True
-        except sqlite3.Error as e:
-            logger.info(f"An error occurred: {e}")
-            return False
-
     def update_email_sent(self, new_status: list, id: list, previous_status: list):
         """
-        # Update is_email_sent of customer
+
         Args:
             new_status (list): New status of email sent.
             id (list): ID of the customer to update.
@@ -538,3 +382,88 @@ class Database:
 
         except sqlite3.Error as e:
             logger.info(f"An error occurred while querying the database: {e}")
+
+    def update(
+        self,
+        columns_name: list,
+        values: tuple,
+        where_value: tuple,
+        table_name="customers",
+        where_col=tuple,
+    ):
+        try:
+
+            set_clause = ", ".join(f"{col} = ?" for col in columns_name)
+            where_clause = " AND ".join(f"{where} = ?" for where in where_col)
+
+            query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}"
+
+            self.cursor.execute(query, values + (where_value))
+            self.conn.commit()
+            return True
+
+        except Exception as e:
+            logger.info(f"An error occurred while querying the database: {e}")
+            print(e)
+            return False
+
+    def delete(
+        self,
+        where: tuple = (None,),
+        where_value: tuple = (None,),
+        table_name="customers",
+    ):
+        try:
+
+            if where != (None,) and where_value != (None,):
+                where_clause = " AND ".join(f"{col}=?" for col in where)
+                query = f"DELETE FROM {table_name} WHERE {where_clause}"
+                self.cursor.execute(query, where_value)
+            else:
+                query = f"DELETE FROM {table_name}"
+                self.cursor.execute(query)
+
+            self.conn.commit()
+            return True
+        except Exception as e:
+            logger.info(f"An error occurred while querying the database: {e}")
+            print(e)
+            return False
+
+    def join(self, table_names: list, limit=10, offset=0, where: list = None):
+        try:
+            # Get today's date in the format 'YYYY-MM-DD'
+            today = datetime.now().date()
+            print(f"limit={limit} and offset={offset}")
+
+            if where is not None:
+                query = f"""
+                    SELECT DISTINCT c.id AS customer_id, c.name, 
+                        a.check_in, a.checkout
+                    FROM {table_names[0]} AS c
+                    LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
+                    WHERE {where[0]} = ? 
+                    AND (DATE(a.check_in) = ? OR a.check_in IS NULL) 
+                    LIMIT ? OFFSET ?
+                """
+                self.cursor.execute(query, (where[1], today, limit, offset))
+                results = self.cursor.fetchall()
+
+                return results
+            else:
+                query = f"""
+                    SELECT DISTINCT c.id AS customer_id, c.name, 
+                        a.check_in, a.checkout
+                    FROM {table_names[0]} AS c
+                    LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
+                    WHERE DATE(a.check_in) = ? OR a.check_in IS NULL 
+                    LIMIT ? OFFSET ?
+                """
+                self.cursor.execute(query, (today, limit, offset))
+                results = self.cursor.fetchall()
+
+                return results
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred while querying the database: {e}")
+            print(e)
+            return None

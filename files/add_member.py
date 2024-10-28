@@ -182,6 +182,15 @@ class AddMember(tk.Toplevel):
         else:
             membership_expiry = datetime.now() + timedelta(days=365)
         amount_paid_date = datetime.now()
+        col = (
+            "name" "email",
+            "phone",
+            "subscription_type",
+            "membership_expiry",
+            "subscription_price",
+            "total_amount_paid",
+            "last_payment_date",
+        )
         customer = (
             name,
             email,
@@ -192,7 +201,7 @@ class AddMember(tk.Toplevel):
             amount_paid,
             amount_paid_date,
         )
-        row_id = self.db.insert(customer)
+        row_id = self.db.insert(customer, col)
         if row_id is not None:
             self.name_entry.delete(0, "end")
             self.phone_entry.delete(0, "end")

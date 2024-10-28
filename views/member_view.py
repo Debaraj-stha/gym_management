@@ -30,7 +30,7 @@ class MembersView(tk.Frame):
         self.limit = 2
         self.offset = 0
         self.current_page = 1
-        self.total_records = self.db.total_customers()
+        self.total_records = self.db.total_records()
         self.paginated_members = []
         self.show_dots = False
         self.has_prev = False
@@ -132,13 +132,14 @@ class MembersView(tk.Frame):
             "membership_expiry",
         ]
         sort_order = ["asc", "desc"]
-        createLabel(toolrow, "Sort by:").grid(row=2, column=3)
         self.sort_by_columns_combobox = Combobox(toolrow, values=sort_by_columns)
-        self.sort_by_columns_combobox.grid(row=2, column=4, sticky="nsew")
-        self.sort_by_columns_combobox.set(sort_by_columns[0])
+        self.sort_by_columns_combobox.grid(row=2, column=3, sticky="nsew")
+        self.sort_by_columns_combobox.set(
+            "Sort by",
+        )
         self.sort_order_combobox = Combobox(toolrow, values=sort_order)
         self.sort_order_combobox.current(0)
-        self.sort_order_combobox.grid(row=2, column=5, sticky="nsew")
+        self.sort_order_combobox.grid(row=2, column=4, sticky="nsew")
         self.sort_by_columns_combobox.bind("<<ComboboxSelected>>", self._sort)
         self.sort_order_combobox.bind("<<ComboboxSelected>>", self._sort)
 

@@ -15,10 +15,10 @@ class AttendanceView(tk.Frame):
         super().__init__(parent)
         self.controller = controller
         self.db = db
-        self.limit = 1
+        self.limit = 3
         self.offset = 0
         self.current_page = 1
-        self.total_records = self.db.total_customers()
+        self.total_records = self.db.total_records()
         self.paginated_members = []
         self.show_dots = False
         self.has_prev = False
@@ -26,14 +26,15 @@ class AttendanceView(tk.Frame):
         self.total_buttons = None
         self.customers = []
         self._paginate()
-
+        # res = self.db.delete(("id",), (7,), table_name="attendance")
+        # print(res)
         self.create_ui()
         print(self.total_records)
 
     def _paginate(self):
-        end = self.current_page * self.limit
-        start = self.offset
-        self.customers = self.db.get_customers("name", self.limit, self.offset)
+        self.customers = self.db.join(
+            ["customers", "attendance"], self.limit, self.offset
+        )
 
     def create_ui(self):
         toolrow = tk.Frame(self)
@@ -53,17 +54,18 @@ class AttendanceView(tk.Frame):
         backButton(self, self.controller)
         today = datetime.today()
         createLabel(toolrow, f'Today:{today.strftime("%Y-%m-%d")}').grid(
-            row=1, column=1, columnspan=3, sticky="ew"
+            row=1, column=1, sticky="w"
         )
         self.customers_frame = Frame(self)
         self.customers_frame.grid(row=2, column=1, sticky="nsew")
         self._config_gridcolumn(self.customers_frame)
-        createLabel(self.customers_frame, "Name:").grid(row=1, column=1, sticky="nsew")
+        createLabel(self.customers_frame, "Id:").grid(row=1, column=1, sticky="nsew")
+        createLabel(self.customers_frame, "Name:").grid(row=1, column=2, sticky="nsew")
         createLabel(self.customers_frame, "Check in:").grid(
-            row=1, column=2, sticky="nsew"
+            row=1, column=3, sticky="nsew"
         )
         createLabel(self.customers_frame, "Check out:").grid(
-            row=1, column=3, sticky="nsew"
+            row=1, column=4, sticky="nsew"
         )
 
         self._display_customers()
@@ -90,7 +92,6 @@ class AttendanceView(tk.Frame):
         self._update_table()
 
     def _update_table(self):
-
         for widget in self.customers_row.winfo_children():
             widget.destroy()
 
@@ -120,27 +121,80 @@ class AttendanceView(tk.Frame):
             frame.columnconfigure(i, weight=1)
 
     def _display_customers(self):
+        print(self.customers)
         if self.customers:
             self.customers_row = Frame(self.customers_frame)
             self.customers_row.grid(
-                row=2, column=1, columnspan=3, sticky="nsew", pady=10
+                row=2, column=0, columnspan=4, sticky="nsew", pady=10
             )
             self._config_gridcolumn(self.customers_row)
             for i, customer in enumerate(self.customers):
-
-                createLabel(self.customers_row, f"{customer[i]}").grid(
+                createLabel(self.customers_row, f"{customer[0]}").grid(
                     row=i, column=1, sticky="nsew", pady=10
+                )
+                createLabel(self.customers_row, f"{customer[1]}").grid(
+                    row=i, column=2, sticky="nsew", pady=10
                 )
 
                 checkin_var = tk.BooleanVar(self.customers_row)
-                checkin_box = Checkbutton(self.customers_row, variable=checkin_var)
-                checkin_box.grid(row=i, column=2, sticky="nsew", pady=10)
+                checkin_box = Checkbutton(
+                    self.customers_row,
+                    variable=checkin_var,
+                    command=lambda customer_id=customer[0]: self._check_in(customer_id),
+                )
+                checkin_box.grid(row=i, column=3, sticky="nsew", pady=10)
 
                 checkout_var = tk.BooleanVar(self.customers_row)
-                checkout_box = Checkbutton(self.customers_row, variable=checkout_var)
-                checkout_box.grid(row=i, column=3, sticky="nsew", pady=10)
+                checkout_box = Checkbutton(
+                    self.customers_row,
+                    variable=checkout_var,
+                    command=lambda customer_id=customer[0]: self._check_out(
+                        customer_id
+                    ),
+                )
+                checkout_box.grid(row=i, column=4, sticky="nsew", pady=10)
+                ##disabling  checkboxes if already checked
+                today = datetime.now().strftime("%Y-%m-%d")
+
+                if customer[2] is not None and customer[2]:
+                    checkin_var.set(True)
+                    checkin_box.config(state="disabled")
+                if customer[3] is not None:
+                    checkout_var.set(True)
+                    checkout_box.config(state="disabled")
 
         else:
             createLabel(self, "No customers found").grid(
                 row=2, column=1, columnspan=3, sticky="ew"
             )
+
+    def _check_in(self, customer_id):
+        table_name = "attendance"
+        col = ["check_in", "customer_id"]
+        check_in = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        values = (check_in, customer_id)
+        res = self.db.insert(values, col, table_name)
+        if res:
+            print(f"res:{res}")
+
+    def _check_out(self, customer_id):
+        table_name = "attendance"
+        col = ["checkout", "customer_id"]
+        check_out = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        today_date = datetime.now()
+
+        formatted_date = today_date.strftime("%Y-%m-%d")
+
+        attendance_id = self.db.get_specific(
+            ("customer_id", "DATE(check_in)"),
+            (customer_id, formatted_date),
+            ("id",),
+            table_name,
+        )[0][0]
+        res = self.db.update(
+            ["checkout"],
+            (check_out,),
+            attendance_id,
+            table_name=table_name,
+            where="id",
+        )
