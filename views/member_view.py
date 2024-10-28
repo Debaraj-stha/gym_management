@@ -3,7 +3,7 @@ from datetime import datetime
 import tkinter as tk
 import os
 from tkinter import Frame, IntVar, ttk
-from tkinter.ttk import Style, Treeview
+from tkinter.ttk import Style, Treeview, Combobox
 from PIL import Image, ImageTk
 from tkinter import messagebox
 
@@ -27,7 +27,7 @@ class MembersView(tk.Frame):
         # initialization
         self.controller = controller
         self.db = db
-        self.limit = 1
+        self.limit = 2
         self.offset = 0
         self.current_page = 1
         self.total_records = self.db.total_customers()
@@ -36,6 +36,7 @@ class MembersView(tk.Frame):
         self.has_prev = False
         self.has_next = False
         self.total_buttons = 1
+        self.sort_by_columns = None
         self.db.send_membership_expiring_message(26)
         self._config_row_column()
         self._paginate()
@@ -105,12 +106,12 @@ class MembersView(tk.Frame):
             "<KeyRelease>", lambda event: self._get_customer_between(event)
         )
 
-        createLabel(toolrow, "Membership is expiring on:").grid(
+        createLabel(toolrow, "Membership is expiring on days:").grid(
             row=1,
             column=7,
             sticky="ew",
         )
-        self.days_before_expiry_entry = ttk.Combobox(toolrow, values=days)
+        self.days_before_expiry_entry = Combobox(toolrow, values=days)
         self.days_before_expiry_entry.current(0)
         self.days_before_expiry_entry.grid(row=1, column=8, sticky="ew")
         createLabel(toolrow, "Get pending payment customers:").grid(
@@ -122,6 +123,24 @@ class MembersView(tk.Frame):
             command=self._get_pending_customer,
             variable=self.get_pending_customer_var,
         ).grid(row=2, column=2, sticky="w")
+        sort_by_columns = [
+            "name",
+            "email",
+            "phone",
+            "subscription_date",
+            "last_payment_date",
+            "membership_expiry",
+        ]
+        sort_order = ["asc", "desc"]
+        createLabel(toolrow, "Sort by:").grid(row=2, column=3)
+        self.sort_by_columns_combobox = Combobox(toolrow, values=sort_by_columns)
+        self.sort_by_columns_combobox.grid(row=2, column=4, sticky="nsew")
+        self.sort_by_columns_combobox.set(sort_by_columns[0])
+        self.sort_order_combobox = Combobox(toolrow, values=sort_order)
+        self.sort_order_combobox.current(0)
+        self.sort_order_combobox.grid(row=2, column=5, sticky="nsew")
+        self.sort_by_columns_combobox.bind("<<ComboboxSelected>>", self._sort)
+        self.sort_order_combobox.bind("<<ComboboxSelected>>", self._sort)
 
         # adding members
         createButton(
@@ -191,6 +210,12 @@ class MembersView(tk.Frame):
             )
         )
 
+    def _sort(self, event):
+        self.sort_order = self.sort_order_combobox.get()
+        self.sort_by_columns = self.sort_by_columns_combobox.get()
+        self._paginate(order_by=self.sort_by_columns, sort_order=self.sort_order)
+        self.change_page(1)
+
     def _edit_record(self, event):
 
         item = self.treeview.selection()
@@ -248,10 +273,22 @@ class MembersView(tk.Frame):
         self.prev_button.config(state=self.prev_button_state)
         self.next_button.config(state=self.next_button_state)
 
-    def _paginate(self):
+    def _paginate(self, **kwargs):
         end = self.current_page * self.limit
         start = self.offset
-        self.paginated_members = self.db.get_customers(self.limit, self.offset)
+        if "order_by" in kwargs and "sort_order" in kwargs:
+            order_by = kwargs["order_by"]
+            sort_order = kwargs["sort_order"]
+            self.paginated_members = self.db.get_customers(
+                limit=self.limit,
+                offset=self.offset,
+                order_by=order_by,
+                sort_order=sort_order,
+            )
+            return
+        self.paginated_members = self.db.get_customers(
+            limit=self.limit, offset=self.offset
+        )
 
     def change_page(self, page):
         self.current_page = page
@@ -263,7 +300,11 @@ class MembersView(tk.Frame):
         create_buttons(
             self.row_frame, self.current_page, self.total_buttons, self.change_page
         )
-        self._paginate()
+        if self.sort_by_columns is not None:
+            self._paginate(order_by=self.sort_by_columns, sort_order=self.sort_order)
+        else:
+            self._paginate()
+
         self._update_table()
 
     def _update_table(self):

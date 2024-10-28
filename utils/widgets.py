@@ -52,16 +52,18 @@ def createLabel(
 
 
 def backButton(frame, controller):
+    print("clicked")
     image_path = os.path.join(os.getcwd(), "asset/arrow.png")
     image = Image.open(image_path)
-
     image = image.resize((20, 20))
-    arrow_photo = ImageTk.PhotoImage(image)
+
+    # Create a persistent reference for the image
+    frame.arrow_photo = ImageTk.PhotoImage(image)
 
     createButton(
         frame,
         text="Back",
-        image=arrow_photo,
+        image=frame.arrow_photo,
         command=lambda: controller.show_frame("Dashboard"),
     ).grid(row=0, column=0, sticky="ew")
 
@@ -112,6 +114,7 @@ def create_page_numbers(
 
 
 def create_buttons(row_frame, current_page, total_button, change_page):
+    print(f"current page:{current_page}")
     button_to_display = get_display_buttons(current_page, total_button)
     sub_row = Frame(row_frame)
     sub_row.grid(row=0, column=2, sticky="ew")
@@ -123,7 +126,7 @@ def create_buttons(row_frame, current_page, total_button, change_page):
             button = createButton(
                 sub_row,
                 text=f"{page}",
-                # state="active" if page == self.current_page else "normal",
+                state="active" if page == current_page else "normal",
             )
             button.grid(row=0, column=i + 2, padx=(5, 0))
             button.bind(
@@ -152,7 +155,7 @@ def get_display_buttons(current_page, total_buttons):
 
         pages.extend(range(start_page, end_page + 1))
 
-        if self.current_page < total_buttons - 3:
+        if current_page < total_buttons - 3:
             pages.append("...")
 
         pages.append(total_buttons)

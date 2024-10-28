@@ -4,6 +4,7 @@ from tkinter import ttk
 import time
 from datetime import datetime, timedelta
 
+from numpy import delete
 from pyparsing import col
 
 from utils.helper import focusIn, focusOut
@@ -191,7 +192,15 @@ class AddMember(tk.Toplevel):
             amount_paid,
             amount_paid_date,
         )
-        self.db.insert(customer)
+        row_id = self.db.insert(customer)
+        if row_id is not None:
+            self.name_entry.delete(0, "end")
+            self.phone_entry.delete(0, "end")
+            self.email_entry.delete(0, "end")
+            self.subscription_combobox.set("Select Subscription")
+            self.subscription_charge_box.set("...")
+            self.amount_paid_entry.delete(0, "end")
+            self.subscription_charge_box.set("...")
 
         self.after(2000, self._enable_button)
 

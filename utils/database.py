@@ -65,7 +65,7 @@ class Database:
         """
         try:
             self.cursor.execute(
-                """INSERT INTO customers (name, email, phone, subscription_type, membership_expiry, subscription_price,total_amount_paid) VALUES (?,?,?,?,?,?,?)""",
+                """INSERT INTO customers (name, email, phone, subscription_type, membership_expiry, subscription_price,total_amount_paid,last_payment_date) VALUES (?,?,?,?,?,?,?,?)""",
                 customer,
             )
             self.conn.commit()
@@ -107,87 +107,85 @@ class Database:
 
     def get_customers(self, columns="*", limit: int = 10, offset: int = 0, **kwargs):
         """
-        Returns all customers in the database, limited by the specified limit and offset.
+        ### Returns all customers in the database, limited by the specified limit and offset.
 
         Args:
+            columns (str,optional): The columns to retrieve customers from. If not provided, all customers will be returned from the database.
             limit (int, optional): The maximum number of customers to return. Defaults to 10.
             offset (int, optional): The starting index of the customers to return. Defaults to 1.
+            **kwargs: (optional): Additional keyword like between ,sort order,order_by for filtering and sorting customers.
 
         Returns:
             list: A list of customers.
         """
         try:
+            # Setup for optional ordering
+            order_clause = ""
+            if "order_by" in kwargs and "sort_order" in kwargs:
+                order_by = kwargs["order_by"]
+                sort_order = kwargs["sort_order"]
+                order_clause = f"ORDER BY {order_by} {sort_order}"
+
+            # If a date filter is specified
             if "between" in kwargs:
                 column_name, from_date, to_date = kwargs["between"]
-                logger.info(kwargs["between"])
 
-                # Split the date strings to detect their format
+                # Date format checks
                 from_day_list = from_date.split("-")
                 to_date_list = to_date.split("-")
                 f_len = len(from_day_list)
                 t_len = len(to_date_list)
 
-                # Convert to year if a full date is given in from_date and only year is provided in to_date
-                if f_len > 1 and t_len == 1:
-                    # Extract only the year from from_date
+                # Apply different queries based on date format
+                if f_len > 1 and t_len == 1:  # Year for to_date only
                     from_year = from_day_list[0]
-                    # Use only the year for comparison
-                    self.cursor.execute(
-                        f"SELECT * FROM customers WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? LIMIT ? OFFSET ?",
-                        (
-                            from_year,
-                            to_date,
-                            limit,
-                            offset,
-                        ),  # Compare only the year parts
-                    )
-                elif f_len == 1 and t_len > 1:
-                    # Extract only the year from to_date
+                    query = f"""
+                        SELECT {columns} FROM customers 
+                        WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? 
+                        {order_clause} LIMIT ? OFFSET ?
+                    """
+                    self.cursor.execute(query, (from_year, to_date, limit, offset))
+                elif f_len == 1 and t_len > 1:  # Year for from_date only
                     to_year = to_date_list[0]
-                    # Use only the year for comparison
-                    self.cursor.execute(
-                        f"SELECT * FROM customers WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? LIMIT ? OFFSET ?",
-                        (
-                            from_date,
-                            to_year,
-                            limit,
-                            offset,
-                        ),  # Compare only the year parts
-                    )
-                elif f_len == 1 or t_len == 1:
-                    # Both are year only
-                    self.cursor.execute(
-                        f"SELECT * FROM customers WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? LIMIT ? OFFSET ?",
-                        (from_date, to_date, limit, offset),
-                    )
-                elif f_len == 2 or t_len == 2:
-                    # Year and month comparison
-                    self.cursor.execute(
-                        f"SELECT * FROM customers WHERE strftime('%Y-%m', {column_name}) BETWEEN ? AND ?",
-                        (from_date, to_date),
-                    )
-                else:
-                    # Full date comparison
-                    self.cursor.execute(
-                        f"SELECT * FROM customers WHERE {column_name} BETWEEN ? AND ? LIMIT ? OFFSET ?",
-                        (from_date, to_date, limit, offset),
-                    )
+                    query = f"""
+                        SELECT {columns} FROM customers 
+                        WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? 
+                        {order_clause} LIMIT ? OFFSET ?
+                    """
+                    self.cursor.execute(query, (from_date, to_year, limit, offset))
+                elif f_len == 1 or t_len == 1:  # Both are year only
+                    query = f"""
+                        SELECT {columns} FROM customers 
+                        WHERE strftime('%Y', {column_name}) BETWEEN ? AND ? 
+                        {order_clause} LIMIT ? OFFSET ?
+                    """
+                    self.cursor.execute(query, (from_date, to_date, limit, offset))
+                elif f_len == 2 or t_len == 2:  # Year and month
+                    query = f"""
+                        SELECT {columns} FROM customers 
+                        WHERE strftime('%Y-%m', {column_name}) BETWEEN ? AND ? 
+                        {order_clause} LIMIT ? OFFSET ?
+                    """
+                    self.cursor.execute(query, (from_date, to_date, limit, offset))
+                else:  # Full date comparison
+                    query = f"""
+                        SELECT {columns} FROM customers 
+                        WHERE {column_name} BETWEEN ? AND ? 
+                        {order_clause} LIMIT ? OFFSET ?
+                    """
+                    self.cursor.execute(query, (from_date, to_date, limit, offset))
 
-                res = self.cursor.fetchall()
-                logger.info(res)
-                return res
+                return self.cursor.fetchall()
 
-            # Fallback for fetching customers without a date filter
-            query = f"SELECT {columns} FROM customers LIMIT? OFFSET?"
+            # Default case without date filtering
+            query = f"SELECT {columns} FROM customers {order_clause} LIMIT ? OFFSET ?"
             self.cursor.execute(query, (limit, offset))
-            return self.cursor.fetchall()
-            # # self.cursor.execute(
-            # #     "SELECT * FROM customers LIMIT ? OFFSET ?", (limit, offset)
-            # # )
-            # return self.cursor.fetchall()
+            res = self.cursor.fetchall()
+            return res
 
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            print(e)
             return []
 
     def update_last_payment_date(self, customer_id: id, last_payment_date: datetime):
@@ -436,17 +434,24 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def get_customer_by_pending_payment(self, limit, offset):
+    def get_customer_by_pending_payment(
+        self, limit, offset, order_by="name", sort_order="asc"
+    ):
         """
         Returns all customers whose total amount paid is less than their subscription price.
+        Args:
+        limit (int): The maximum number of customers to return.
+        offset (int): The number of customers to skip before returning the results.
+        order_by (str, optional): The column to order the results by. Defaults to "name".
+        sort_order (str, optional): The order of sorting (asc or desc). Defaults to "asc".
 
         Returns:
             list: A list of customers whose total amount paid is less than their subscription price.
         """
         try:
             self.cursor.execute(
-                "SELECT * FROM customers WHERE total_amount_paid < subscription_price LIMIT ? OFFSET ?",
-                (limit, offset),
+                "SELECT * FROM customers WHERE total_amount_paid < subscription_price LIMIT ? OFFSET ? ORDER BY ? ?",
+                (limit, offset, order_by, sort_order),
             )
             return self.cursor.fetchall()
         except sqlite3.Error as e:
