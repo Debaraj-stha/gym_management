@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import datetime, timedelta
-from venv import logger
+from utils.logger import logger
 
 from utils.helper import send_email
 
@@ -74,15 +74,29 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def total_records(self, table_name="customers"):
+    def total_records(
+        self,
+        where_condition: tuple = None,
+        where_value: tuple = None,
+        table_name="customers",
+    ):
         """
-        Count the number of customers
+        ## Count the number of customers
         Args:
+            where_condition (tuple): A tuple containing column names to use in the WHERE clause.
+            where_value (tuple): Values to use with the WHERE clause.
             table_name (str): The name of the table. Default is customers.
         Returns:
             int: total customers
         """
         try:
+            if where_condition is not None and where_value is not None:
+                where_clause = " AND ".join(f"{col}=?" for col in where_condition)
+                self.cursor.execute(
+                    f"SELECT COUNT(*) FROM {table_name} WHERE {where_clause}",
+                    where_value,
+                )
+                return self.cursor.fetchone()[0]
             self.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
             return self.cursor.fetchone()[0]
         except sqlite3.Error as e:
@@ -92,7 +106,9 @@ class Database:
         self,
         where: tuple,
         value: tuple,
-        columns_name: tuple = ("*"),
+        columns_name: tuple = "*",
+        limit=10,
+        offset=0,
         table_name="customers",
         is_date_field=True,
     ):
@@ -116,8 +132,14 @@ class Database:
 
             where_clause = " AND ".join(f"{col}=?" for col in where)
 
-            query = f"SELECT {col} FROM {table_name} WHERE {where_clause}"
-            self.cursor.execute(query, value)
+            query = (
+                f"SELECT {col} FROM {table_name} WHERE {where_clause} LIMIT ? OFFSET ?"
+            )
+            print(query)
+            print("Executing query:", query)
+            print("With values:", value + (limit, offset))
+
+            self.cursor.execute(query, value + (limit, offset))
 
             return self.cursor.fetchall()
 
@@ -127,7 +149,7 @@ class Database:
 
     def get_customers(
         self,
-        columns: list = "*",
+        columns: tuple = "*",
         limit: int = 10,
         offset: int = 0,
         table_name="customers",
@@ -148,6 +170,7 @@ class Database:
         try:
 
             order_clause = ""
+            columns_name = ",".join(columns) if columns != ("*",) else "*"
             if "order_by" in kwargs and "sort_order" in kwargs:
                 order_by = kwargs["order_by"]
                 sort_order = kwargs["sort_order"]
@@ -439,27 +462,28 @@ class Database:
             if where is not None:
                 query = f"""
                     SELECT DISTINCT c.id AS customer_id, c.name, 
-                        a.check_in, a.checkout
+                        CASE WHEN DATE(a.check_in) = ? THEN a.check_in ELSE NULL END AS check_in,
+                        CASE WHEN DATE(a.checkout) = ? THEN a.checkout ELSE NULL END AS checkout
                     FROM {table_names[0]} AS c
                     LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
                     WHERE {where[0]} = ? 
-                    AND (DATE(a.check_in) = ? OR a.check_in IS NULL) 
                     LIMIT ? OFFSET ?
                 """
-                self.cursor.execute(query, (where[1], today, limit, offset))
+                self.cursor.execute(query, (today, today, where[1], limit, offset))
                 results = self.cursor.fetchall()
 
                 return results
             else:
                 query = f"""
                     SELECT DISTINCT c.id AS customer_id, c.name, 
-                        a.check_in, a.checkout
+                        CASE WHEN DATE(a.check_in) = ? THEN a.check_in ELSE NULL END AS check_in,
+                        CASE WHEN DATE(a.checkout) = ? THEN a.checkout ELSE NULL END AS checkout
                     FROM {table_names[0]} AS c
                     LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
-                    WHERE DATE(a.check_in) = ? OR a.check_in IS NULL 
                     LIMIT ? OFFSET ?
                 """
-                self.cursor.execute(query, (today, limit, offset))
+                print(query)
+                self.cursor.execute(query, (today, today, limit, offset))
                 results = self.cursor.fetchall()
 
                 return results

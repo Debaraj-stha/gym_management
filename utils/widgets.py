@@ -69,7 +69,7 @@ def backButton(frame, controller):
 
 
 def create_page_numbers(
-    total_records, row_frame, change_page, limit=10, current_page=1
+    total_records, row_frame, change_page, limit=10, current_page=1, row_index=6
 ):
     """
     generate  and display pages
@@ -86,7 +86,7 @@ def create_page_numbers(
     total_buttons = total_records // limit
     if total_records % limit != 0:
         total_buttons += 1
-    row_frame.grid(row=6, column=1, sticky="ew")
+    row_frame.grid(row=row_index, column=0, sticky="ew")
 
     createLabel(row_frame, text="Page:").grid(row=0, column=0, sticky="ew")
 
@@ -117,7 +117,7 @@ def create_buttons(row_frame, current_page, total_button, change_page):
     print(f"current page:{current_page}")
     button_to_display = get_display_buttons(current_page, total_button)
     sub_row = Frame(row_frame)
-    sub_row.grid(row=0, column=2, sticky="ew")
+    sub_row.grid(row=0, column=2, sticky="w")
     # Display page buttons
     for i, page in enumerate(button_to_display):
         if page == "...":

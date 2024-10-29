@@ -292,6 +292,8 @@ class MembersView(tk.Frame):
         )
 
     def change_page(self, page):
+        if page == self.current_page:
+            return
         self.current_page = page
         self.offset = (page - 1) * self.limit
 

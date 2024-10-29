@@ -1,13 +1,15 @@
 import tkinter as tk
 from datetime import datetime
 from tkinter.ttk import Checkbutton, Frame
+from utils.logger import logger
 from utils.widgets import (
     backButton,
     create_buttons,
     create_page_numbers,
-    createLabel,
     createButton,
+    createLabel,
 )
+from views.single_customer_attendance import SingleCustomer
 
 
 class AttendanceView(tk.Frame):
@@ -26,6 +28,7 @@ class AttendanceView(tk.Frame):
         self.total_buttons = None
         self.customers = []
         self._paginate()
+
         # res = self.db.delete(("id",), (7,), table_name="attendance")
         # print(res)
         self.create_ui()
@@ -59,14 +62,15 @@ class AttendanceView(tk.Frame):
         self.customers_frame = Frame(self)
         self.customers_frame.grid(row=2, column=1, sticky="nsew")
         self._config_gridcolumn(self.customers_frame)
-        createLabel(self.customers_frame, "Id:").grid(row=1, column=1, sticky="nsew")
-        createLabel(self.customers_frame, "Name:").grid(row=1, column=2, sticky="nsew")
-        createLabel(self.customers_frame, "Check in:").grid(
+        createLabel(self.customers_frame, "Id").grid(row=1, column=1, sticky="nsew")
+        createLabel(self.customers_frame, "Name").grid(row=1, column=2, sticky="nsew")
+        createLabel(self.customers_frame, "Check in").grid(
             row=1, column=3, sticky="nsew"
         )
-        createLabel(self.customers_frame, "Check out:").grid(
+        createLabel(self.customers_frame, "Check out").grid(
             row=1, column=4, sticky="nsew"
         )
+        createLabel(self.customers_frame, "Action").grid(row=1, column=5, sticky="nsew")
 
         self._display_customers()
         self.row_frame = tk.Frame(self)
@@ -79,6 +83,8 @@ class AttendanceView(tk.Frame):
         )
 
     def change_page(self, page):
+        if page == self.current_page:
+            return
         self.current_page = page
         self.offset = (page - 1) * self.limit
 
@@ -117,7 +123,7 @@ class AttendanceView(tk.Frame):
         self.next_button.config(state=self.next_button_state)
 
     def _config_gridcolumn(self, frame):
-        for i in range(4):
+        for i in range(6):
             frame.columnconfigure(i, weight=1)
 
     def _display_customers(self):
@@ -125,38 +131,55 @@ class AttendanceView(tk.Frame):
         if self.customers:
             self.customers_row = Frame(self.customers_frame)
             self.customers_row.grid(
-                row=2, column=0, columnspan=4, sticky="nsew", pady=10
+                row=2, column=0, columnspan=6, sticky="nsew", pady=10
             )
             self._config_gridcolumn(self.customers_row)
+
             for i, customer in enumerate(self.customers):
-                createLabel(self.customers_row, f"{customer[0]}").grid(
-                    row=i, column=1, sticky="nsew", pady=10
-                )
-                createLabel(self.customers_row, f"{customer[1]}").grid(
-                    row=i, column=2, sticky="nsew", pady=10
+                # Create a container frame for each row to bind the click event
+                row_frame = Frame(self.customers_row)
+                self._config_gridcolumn(row_frame)
+                row_frame.grid(row=i, column=0, columnspan=6, sticky="nsew", pady=10)
+                row_frame.bind(
+                    "<Button-1>",
+                    lambda e, customer=customer: self._on_row_click(customer),
                 )
 
-                checkin_var = tk.BooleanVar(self.customers_row)
+                createLabel(row_frame, f"{customer[0]}").grid(
+                    row=0, column=1, sticky="nsew", pady=10
+                )
+                createLabel(row_frame, f"{customer[1]}").grid(
+                    row=0, column=2, sticky="nsew", pady=10
+                )
+
+                checkin_var = tk.BooleanVar(row_frame)
                 checkin_box = Checkbutton(
-                    self.customers_row,
+                    row_frame,
                     variable=checkin_var,
                     command=lambda customer_id=customer[0]: self._check_in(customer_id),
                 )
-                checkin_box.grid(row=i, column=3, sticky="nsew", pady=10)
+                checkin_box.grid(row=0, column=3, sticky="nsew", pady=10)
 
-                checkout_var = tk.BooleanVar(self.customers_row)
+                checkout_var = tk.BooleanVar(row_frame)
                 checkout_box = Checkbutton(
-                    self.customers_row,
+                    row_frame,
                     variable=checkout_var,
                     command=lambda customer_id=customer[0]: self._check_out(
                         customer_id
                     ),
                 )
-                checkout_box.grid(row=i, column=4, sticky="nsew", pady=10)
-                ##disabling  checkboxes if already checked
+
+                checkout_box.grid(row=0, column=4, sticky="nsew", pady=10)
+                createButton(
+                    row_frame,
+                    "View Attendance",
+                    command=lambda customer=customer: self._on_row_click(customer),
+                ).grid(row=0, column=5, sticky="nsew")
+
+                # Disabling checkboxes if already checked
                 today = datetime.now().strftime("%Y-%m-%d")
 
-                if customer[2] is not None and customer[2]:
+                if customer[2] is not None:
                     checkin_var.set(True)
                     checkin_box.config(state="disabled")
                 if customer[3] is not None:
@@ -167,6 +190,15 @@ class AttendanceView(tk.Frame):
             createLabel(self, "No customers found").grid(
                 row=2, column=1, columnspan=3, sticky="ew"
             )
+
+    def _on_row_click(self, customer):
+        try:
+
+            SingleCustomer(self.db, customer)
+        except Exception as e:
+            logger.info(f"An exception occurred:{e}")
+
+    # Implement the logic for what should happen when the row is clicked
 
     def _check_in(self, customer_id):
         table_name = "attendance"
