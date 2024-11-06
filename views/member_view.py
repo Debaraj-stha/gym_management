@@ -1,10 +1,16 @@
+from email import header
 import tkinter as tk
 from tkinter import Frame, IntVar, ttk
 from tkinter.ttk import Style, Treeview, Combobox
 import os
 from tkinter import messagebox
-
 import pandas as pd
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from io import BytesIO
 
 from files.update_member import UpdateMember
 from utils.widgets import (
@@ -150,14 +156,14 @@ class MembersView(tk.Frame):
         ).grid(row=3, column=1, sticky="nsew", padx=10)
 
         createButton(
-            button_row, "Export as json", command=lambda: self._export_to_json()
+            button_row, "Export as pdf", command=lambda: self._export_to_pdf()
         ).grid(row=3, column=2, sticky="nsew", padx=(10))
         createButton(
-            button_row, "Export as excel", command=lambda: self._export_to_excel()
+            button_row, "Export as json", command=lambda: self._export_to_json()
         ).grid(row=3, column=3, sticky="nsew", padx=(10))
-        createButton(button_row, "Print", command=lambda: self._print()).grid(
-            row=3, column=4, sticky="w", padx=(10)
-        )
+        createButton(
+            button_row, "Export as excel", command=lambda: self._export_to_excel()
+        ).grid(row=3, column=4, sticky="nsew", padx=(10))
 
         # adding members
         createButton(
@@ -500,6 +506,73 @@ class MembersView(tk.Frame):
         except Exception as e:
             print(f"An error occurred while exporting to JSON: {e}")
 
+    def _export_to_pdf(self, *args):
+        try:
+            # Fetch data to export
+            cols = [
+                "name",
+                "phone",
+                "subscription_date",
+                "membership_expiry",
+                "subscription_price",
+                "total_amount _paid",
+                "last_payment_date",
+            ]
+            customers = self.db.get_all(columns_name=cols)
+            print("Exporting to PDF")
+
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+            elements = []
+
+            data = [cols] + customers
+            column_widths = [
+                0.5 * inch,
+                1.5 * inch,
+                1.5 * inch,
+                1.5 * inch,
+                0.6 * inch,
+                1 * inch,
+                1 * inch,
+                1 * inch,
+                1 * inch,
+                1 * inch,
+            ]
+
+            table = Table(data)
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                        ("FONTSIZE", (0, 0), (-1, -1), 8),
+                        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+                        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                    ]
+                )
+            )
+            elements.append(table)
+            doc.build(elements)
+            buffer.seek(0)
+
+            # Define the target directory path within the current working directory
+            directory = self._make_directory()
+            # Define the complete file path
+            file_path = os.path.join(directory, "customers.pdf")
+
+            # Save PDF file to the specified directory
+            with open(file_path, "wb") as f:
+                f.write(buffer.getvalue())
+            buffer.close()
+
+            print(f"PDF exported successfully to {file_path}")
+        except Exception as e:
+            print(f"An error occurred while exporting to PDF: {e}")
+
     def _export_to_excel(self, *args):
         try:
             # Fetch data to export
@@ -519,15 +592,6 @@ class MembersView(tk.Frame):
             print(f"Excel exported successfully to {file_path}")
         except Exception as e:
             print(f"An error occurred while exporting to Excel: {e}")
-
-    def _print(self, *args):
-        try:
-            # Fetch data to export
-            customers = self.db.get_all()
-            print("Printing")
-
-        except Exception as e:
-            print(f"An error occurred while printing: {e}")
 
     def _make_directory(self, directory="data"):
         """ ""

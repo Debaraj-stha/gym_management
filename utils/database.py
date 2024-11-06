@@ -524,9 +524,10 @@ class Database:
             print(e)
             return None
 
-    def get_all(self, table_name="customers"):
+    def get_all(self, columns_name="*", table_name="customers"):
         try:
-            query = f"SELECT * FROM {table_name}"
+            col = ",".join(columns_name) if columns_name != ("*",) else "*"
+            query = f"SELECT {col} FROM {table_name}"
             self.cursor.execute(query)
             results = self.cursor.fetchall()
             return results
