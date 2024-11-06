@@ -72,6 +72,7 @@ class Database:
             self.conn.commit()
             return self.cursor.lastrowid
         except sqlite3.Error as e:
+            print(e)
             logger.info(f"An error occurred: {e}")
 
     def total_records(
@@ -135,16 +136,14 @@ class Database:
             query = (
                 f"SELECT {col} FROM {table_name} WHERE {where_clause} LIMIT ? OFFSET ?"
             )
-            print(query)
-            print("Executing query:", query)
-            print("With values:", value + (limit, offset))
 
+            # Execute the query
             self.cursor.execute(query, value + (limit, offset))
-
             return self.cursor.fetchall()
 
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            print(e)
             return []
 
     def get_customers(
@@ -279,31 +278,61 @@ class Database:
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
 
-    def search_customers(
+    def search(
         self,
         search_term: str,
+        column_names: list = "*",
         search_column: list = ["name", "email", "phone", "subscription_type"],
+        table_name: str = "customers",
+        **kwargs,
     ):
         """
-        Search for customers whose names or emails contain the given search term.
+        Search for customers whose names, emails, or other fields contain the given search term.
 
         Args:
             search_term (str): The search term to match.
-            search_column (list, optional): The columns to search in. Defaults to ["name", "email", "phone", "subscription_type"].
+            column_names (str or list): The columns to retrieve. Defaults to "*" for all columns.
+            search_column (list): The columns to search in. Defaults to ["name", "email", "phone", "subscription_type"].
+            table_name (str): The table name to search in. Defaults to "customers".
+            join_with (str, optional): The table to join with. Defaults to None.
+            join_column (list, optional): The columns to join with. Defaults to None.
 
         Returns:
-            list: A list of customers whose names or emails contain the search term.
+            list: A list of matching records.
         """
         try:
+            # Handle column names for select statement
+            if isinstance(column_names, list):
+                column_names = ", ".join(
+                    [
+                        f"t1.{col}" if isinstance(col, str) else f"{col[0]}.{col[1]}"
+                        for col in column_names
+                    ]
+                )
+
+            # Build the LIKE clause
             like_query = [f"{col} LIKE ?" for col in search_column]
             like_clause = " OR ".join(like_query)
-            self.cursor.execute(
-                f"SELECT * FROM customers WHERE {like_clause}",
-                [f"%{search_term}%"] * len(search_column),
-            )
+
+            # Join table if specified
+            if "join_with" in kwargs:
+                join_with = kwargs.get("join_with")
+                join_column = kwargs.get("join_column")
+                query = f"""
+                    SELECT {column_names} FROM {table_name} as t1
+                    INNER JOIN {join_with} as t2 ON t1.{join_column[0]} = t2.{join_column[1]}
+                    WHERE {like_clause}
+                """
+            else:
+                query = f"SELECT {column_names} FROM {table_name} WHERE {like_clause}"
+
+            # Execute query with search term applied to each search column
+            self.cursor.execute(query, [f"%{search_term}%"] * len(search_column))
             return self.cursor.fetchall()
+
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            return []
 
     def insert_multiple(self, customers: list, table_name: str = "customers"):
         """
@@ -322,7 +351,11 @@ class Database:
             logger.info(f"An error occurred: {e}")
 
     def get_customer_by_pending_payment(
-        self, limit, offset, order_by="name", sort_order="asc"
+        self,
+        limit,
+        offset,
+        order_by="name",
+        sort_order="asc",
     ):
         """
         Returns all customers whose total amount paid is less than their subscription price.
@@ -453,40 +486,50 @@ class Database:
             print(e)
             return False
 
-    def join(self, table_names: list, limit=10, offset=0, where: list = None):
+    def join(
+        self,
+        table_names: list,
+        limit=10,
+        offset=0,
+        where: list = None,
+    ):
         try:
-            # Get today's date in the format 'YYYY-MM-DD'
+            # Get today's date in 'YYYY-MM-DD' format
             today = datetime.now().date()
-            print(f"limit={limit} and offset={offset}")
 
-            if where is not None:
-                query = f"""
-                    SELECT DISTINCT c.id AS customer_id, c.name, 
-                        CASE WHEN DATE(a.check_in) = ? THEN a.check_in ELSE NULL END AS check_in,
-                        CASE WHEN DATE(a.checkout) = ? THEN a.checkout ELSE NULL END AS checkout
-                    FROM {table_names[0]} AS c
-                    LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
-                    WHERE {where[0]} = ? 
-                    LIMIT ? OFFSET ?
-                """
-                self.cursor.execute(query, (today, today, where[1], limit, offset))
-                results = self.cursor.fetchall()
+            query = f"""
+                SELECT c.id AS customer_id, c.name, 
+                    MAX(CASE WHEN DATE(a.check_in) = ? THEN a.check_in END) AS check_in,
+                    MAX(CASE WHEN DATE(a.checkout) = ? THEN a.checkout END) AS checkout
+                FROM {table_names[0]} AS c
+                LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
+                GROUP BY c.id
+            """
 
-                return results
+            if where:
+                query += f" HAVING {where[0]} = ?"
+                parameters = (today, today, where[1], limit, offset)
             else:
-                query = f"""
-                    SELECT DISTINCT c.id AS customer_id, c.name, 
-                        CASE WHEN DATE(a.check_in) = ? THEN a.check_in ELSE NULL END AS check_in,
-                        CASE WHEN DATE(a.checkout) = ? THEN a.checkout ELSE NULL END AS checkout
-                    FROM {table_names[0]} AS c
-                    LEFT JOIN {table_names[1]} AS a ON c.id = a.customer_id
-                    LIMIT ? OFFSET ?
-                """
-                print(query)
-                self.cursor.execute(query, (today, today, limit, offset))
-                results = self.cursor.fetchall()
+                parameters = (today, today, limit, offset)
 
-                return results
+            query += " LIMIT ? OFFSET ?"
+
+            self.cursor.execute(query, parameters)
+            results = self.cursor.fetchall()
+
+            return results
+
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred while querying the database: {e}")
+            print(e)
+            return None
+
+    def get_all(self, table_name="customers"):
+        try:
+            query = f"SELECT * FROM {table_name}"
+            self.cursor.execute(query)
+            results = self.cursor.fetchall()
+            return results
         except sqlite3.Error as e:
             logger.info(f"An error occurred while querying the database: {e}")
             print(e)

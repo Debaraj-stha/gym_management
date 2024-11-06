@@ -1,11 +1,10 @@
-from datetime import datetime
-
 import tkinter as tk
-import os
 from tkinter import Frame, IntVar, ttk
 from tkinter.ttk import Style, Treeview, Combobox
-from PIL import Image, ImageTk
+import os
 from tkinter import messagebox
+
+import pandas as pd
 
 from files.update_member import UpdateMember
 from utils.widgets import (
@@ -16,7 +15,7 @@ from utils.widgets import (
     createLabel,
 )
 from files.add_member import AddMember
-from utils.helper import focusIn, focusOut, send_email
+from utils.helper import focusIn, focusOut
 
 days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
@@ -139,9 +138,26 @@ class MembersView(tk.Frame):
         )
         self.sort_order_combobox = Combobox(toolrow, values=sort_order)
         self.sort_order_combobox.current(0)
-        self.sort_order_combobox.grid(row=2, column=4, sticky="nsew")
+        self.sort_order_combobox.grid(row=2, column=4, sticky="nsew", padx=(10))
         self.sort_by_columns_combobox.bind("<<ComboboxSelected>>", self._sort)
         self.sort_order_combobox.bind("<<ComboboxSelected>>", self._sort)
+
+        # frame to hold button row
+        button_row = Frame(toolrow)
+        button_row.grid(row=3, column=1, columnspan=5, sticky="ew", pady=(10, 0))
+        createButton(
+            button_row, "Export as CSV", command=lambda: self._export_to_csv()
+        ).grid(row=3, column=1, sticky="nsew", padx=10)
+
+        createButton(
+            button_row, "Export as json", command=lambda: self._export_to_json()
+        ).grid(row=3, column=2, sticky="nsew", padx=(10))
+        createButton(
+            button_row, "Export as excel", command=lambda: self._export_to_excel()
+        ).grid(row=3, column=3, sticky="nsew", padx=(10))
+        createButton(button_row, "Print", command=lambda: self._print()).grid(
+            row=3, column=4, sticky="w", padx=(10)
+        )
 
         # adding members
         createButton(
@@ -325,15 +341,92 @@ class MembersView(tk.Frame):
             self.search_entry.insert(0, "Search Members...")
 
     def search(self, event):
-        search_term = self.search_entry.get()
+        query = self.search_entry.get()
 
-        if search_term.strip() != "":
+        # Define is_get_result as an instance variable if it doesn't exist
+        if not hasattr(self, "is_get_result"):
+            self.is_get_result = False
 
-            self.paginated_members = self.db.search_customers(search_term)
+        if event.keycode == 36 and query.strip() != "":
+            self.old_value = self.paginated_members
+            self.is_get_result = True
+            self.current_page = 1
+            self.offset = 0
 
-        else:
-            self.paginated_members = self.db.get_customers(self.limit, self.offset)
-        self._update_table()
+            res = self.db.search(
+                query,
+                column_names=[
+                    ["t1", "id"],
+                    ["t1", "name"],
+                    ["t2", "check_in"],
+                    ["t2", "checkout"],
+                ],
+                search_column=["name", "phone", "email", "t1.id"],
+                table_name="customers",
+                join_with="attendance",
+                join_column=["id", "customer_id"],
+            )
+            self.customers = res
+            self._update_table()
+            self._update_page_button_state()
+
+            self.total_records = len(res)
+
+            # Check if self.sub_row exists before forgetting and destroying
+            if hasattr(self, "sub_row") and self.sub_row:
+                self.sub_row.grid_forget()
+                self.sub_row.destroy()
+
+            # Recreate row_frame if necessary
+            if hasattr(self, "row_frame"):
+                self.row_frame.grid_forget()
+                self.row_frame.destroy()
+
+            self.row_frame = tk.Frame(self)
+            self.row_frame.grid(row=4, column=3, sticky="nsew", pady=20)
+
+            # Create pagination buttons based on search results
+            self.sub_row, self.total_buttons, self.prev_button, self.next_button = (
+                create_page_numbers(
+                    self.total_records,
+                    self.row_frame,
+                    self.change_page,
+                    limit=self.limit,
+                    current_page=self.current_page,
+                )
+            )
+
+            return
+
+        # Reset search results if escape key (22) is pressed
+        if self.is_get_result and event.keycode == 22:
+            self.search_entry.delete(0, tk.END)
+            self.paginated_members = self.old_value
+            self.total_records = self.db.total_records()
+
+            if hasattr(self, "sub_row") and self.sub_row:
+                self.sub_row.grid_forget()
+                self.sub_row.destroy()
+            # Recreate row_frame if necessary
+            if hasattr(self, "row_frame"):
+                self.row_frame.grid_forget()
+                self.row_frame.destroy()
+
+            self.row_frame = tk.Frame(self)
+            self.row_frame.grid(row=4, column=3, sticky="nsew", pady=20)
+
+            # Create pagination buttons based on search results
+            self.sub_row, self.total_buttons, self.prev_button, self.next_button = (
+                create_page_numbers(
+                    self.total_records,
+                    self.row_frame,
+                    self.change_page,
+                    limit=self.limit,
+                    current_page=self.current_page,
+                )
+            )
+            self._update_table()
+            self._update_page_button_state()
 
     def _config_row_column(self):
         for i in range(2, 10):
@@ -364,3 +457,85 @@ class MembersView(tk.Frame):
             self.paginated_members = res
 
             self._update_table()
+
+    def _export_to_csv(self):
+        try:
+            # Fetch data to export
+            customers = self.db.get_all()
+            print("Exporting to CSV")
+
+            df = pd.DataFrame(customers)
+
+            # Define the target directory path within the current working directory
+            directory = self._make_directory()
+            # Define the complete file path
+            file_path = os.path.join(directory, "customers.csv")
+
+            # Save CSV file to the specified directory
+            df.to_csv(file_path, index=False)
+
+            print(f"CSV exported successfully to {file_path}")
+
+        except Exception as e:
+            print(f"An error occurred while exporting to CSV: {e}")
+
+    def _export_to_json(self, *args):
+        try:
+            # Fetch data to export
+            customers = self.db.get_all()
+            print("Exporting to JSON")
+
+            df = pd.DataFrame(customers)
+
+            # Define the target directory path within the current working directory
+            directory = self._make_directory()
+            # Define the complete file path
+            file_path = os.path.join(directory, "customers.json")
+
+            # Save JSON file to the specified directory
+            df.to_json(file_path, orient="records")
+
+            print(f"JSON exported successfully to {file_path}")
+            pass
+        except Exception as e:
+            print(f"An error occurred while exporting to JSON: {e}")
+
+    def _export_to_excel(self, *args):
+        try:
+            # Fetch data to export
+            customers = self.db.get_all()
+            print("Exporting to Excel")
+
+            df = pd.DataFrame(customers)
+
+            # Define the target directory path within the current working directory
+            directory = self._make_directory()
+            # Define the complete file path
+            file_path = os.path.join(directory, "customers.xlsx")
+
+            # Save Excel file to the specified directory
+            df.to_excel(file_path, index=False)
+
+            print(f"Excel exported successfully to {file_path}")
+        except Exception as e:
+            print(f"An error occurred while exporting to Excel: {e}")
+
+    def _print(self, *args):
+        try:
+            # Fetch data to export
+            customers = self.db.get_all()
+            print("Printing")
+
+        except Exception as e:
+            print(f"An error occurred while printing: {e}")
+
+    def _make_directory(self, directory="data"):
+        """ ""
+        Define the target directory path within the current working directory
+        """
+        directory = os.path.join(os.getcwd(), directory)
+
+        # Create directory if it doesn't exist
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        return directory

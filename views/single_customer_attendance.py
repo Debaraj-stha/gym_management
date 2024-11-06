@@ -18,7 +18,6 @@ class SingleCustomer(tk.Tk):
             (customer[0],),
             table_name="attendance",
         )
-        print(f"total records:{self.total_records}")
         self.config(padx=10, pady=10)
         self.attendance = []
         self.title(f"{customer[1]}")
@@ -64,7 +63,7 @@ class SingleCustomer(tk.Tk):
         )
         self._display_attendance()
         self.row_frame = tk.Frame(self)
-        # self.row_frame.grid(row=5, column=0, columnspan=5, sticky="nsew", pady=20)
+        self.row_frame.grid(row=5, column=0, columnspan=5, sticky="nsew", pady=20)
 
         self.sub_row, self.total_buttons, self.prev_button, self.next_button = (
             create_page_numbers(
@@ -77,19 +76,30 @@ class SingleCustomer(tk.Tk):
         )
 
     def change_page(self, page):
-        if page == self.current_page:
-            return
-        self.current_page = page
-        self.offset = (page - 1) * self.limit
+        try:
+            if page == self.current_page:
+                return
 
-        self.sub_row.destroy()
-        print(self.current_page)
-        self._update_page_button_state()
-        create_buttons(
-            self.row_frame, self.current_page, self.total_buttons, self.change_page
-        )
-        self._paginate()
-        self._update_table()
+            self.current_page = page
+            self.offset = (page - 1) * self.limit
+            self.sub_row.destroy()  # Remove old page buttons
+
+            self._paginate()  # Fetch new data based on updated offset
+            self._update_table()  # Refresh the table with new data
+
+            # Re-render page numbers
+            self.sub_row, self.total_buttons, self.prev_button, self.next_button = (
+                create_page_numbers(
+                    self.total_records,
+                    self.row_frame,
+                    self.change_page,
+                    limit=self.limit,
+                    current_page=self.current_page,
+                    row_index=1,
+                )
+            )
+        except Exception as e:
+            print(f"Error occurred while changing page: {e}")
 
     def _update_table(self):
         for widget in self.row_frame.winfo_children():
@@ -149,4 +159,3 @@ class SingleCustomer(tk.Tk):
             offset=self.offset,
             table_name="attendance",
         )
-        print(f"attendance is:{self.attendance}")
