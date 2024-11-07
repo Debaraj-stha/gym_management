@@ -59,12 +59,13 @@ def backButton(frame, controller):
     # Create a persistent reference for the image
     frame.arrow_photo = ImageTk.PhotoImage(image)
 
-    createButton(
+    btn = createButton(
         frame,
         text="Back",
         image=frame.arrow_photo,
         command=lambda: controller.show_frame("Dashboard"),
-    ).grid(row=0, column=0, sticky="ew")
+    )
+    return btn
 
 
 def create_page_numbers(

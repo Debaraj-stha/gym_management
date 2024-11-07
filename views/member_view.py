@@ -59,7 +59,9 @@ class MembersView(tk.Frame):
         toolrow.grid_columnconfigure(1, weight=3)
         toolrow.grid_columnconfigure(2, weight=1)
 
-        backButton(self, self.controller)  ##back button
+        backButton(self, self.controller).grid(
+            row=0, column=0, sticky="ew"
+        )  ##back button
 
         # toolbar rows
 

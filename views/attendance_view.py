@@ -56,7 +56,7 @@ class AttendanceView(tk.Frame):
         self.grid_columnconfigure(2, weight=1)
         self.grid_columnconfigure(3, weight=1)
         self.grid_columnconfigure(4, weight=1)
-        backButton(self, self.controller)
+        backButton(self, self.controller).grid(row=0, column=0, sticky="ew")
         today = datetime.today()
         createLabel(toolrow, f'Today:{today.strftime("%Y-%m-%d")}').grid(
             row=1, column=1, sticky="w"
