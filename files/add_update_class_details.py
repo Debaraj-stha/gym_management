@@ -3,8 +3,11 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter.ttk import Combobox, Frame
 
+from files.calender import MyCalendar
 from utils.constraints import DURATIONS, SHIFTS, STATUS, TABLENAME
 from utils.widgets import createButton, createLabel
+
+today = datetime.now().date().strftime("%Y-%m-%d")
 
 
 class AddOrUpdateDetailClass(tk.Toplevel):
@@ -31,8 +34,9 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         createLabel(self, "Date:").grid(row=1, column=1, sticky="w")
         self.date_box = Combobox(self, values=[1, 2, 3])
         self.date_box.grid(row=1, column=2, sticky="nsew")
+        self.date_box.bind("<Button-1>", self._pick_date)
 
-        self.date_box.set(self._old_value[0] if self._is_update else 1)
+        self.date_box.set(self._old_value[0] if self._is_update else today)
 
         createLabel(self, "Duration:").grid(row=2, column=1, sticky="w", pady=10)
         self.duration_box = Combobox(self, values=DURATIONS)
@@ -76,11 +80,11 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         self.entry.grid(row=6, column=2, sticky="nsew", pady=10)
         self.entry.insert(0, self._old_value[5])
 
-        createButton(
-            self,
-            "Update" if self._record_id is not None else "Add",
-            command=self._process,
-        ).grid(row=8, column=2, sticky="nsew", pady=20)
+    def _pick_date(self, *args):
+        def callback(selected_ddat):
+            self.date_box.set(selected_ddat)
+
+        MyCalendar(callback).mainloop()
 
     def _process(self):
         try:
@@ -163,7 +167,7 @@ class AddOrUpdateDetailClass(tk.Toplevel):
             selected_instructors_id = [
                 self.instructors[id][0] for id in selected_instructors_index
             ]
-            today = datetime.now().date().strftime("%Y-%m-%d")
+
             return (
                 today,
                 duration,
