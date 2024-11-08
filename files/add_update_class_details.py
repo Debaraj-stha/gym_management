@@ -1,22 +1,10 @@
+from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
 from tkinter.ttk import Combobox, Frame
 
+from utils.constraints import DURATIONS, SHIFTS, STATUS, TABLENAME
 from utils.widgets import createButton, createLabel
-
-instructors = [
-    "Manish BAsnet",
-    "Deepa Dhakal",
-    "Sandeep Bohora",
-    "Rahjesh Tamang",
-    "Sanjeeta Shrestha",
-    "A",
-    "B",
-    "Jhon",
-    "Michel",
-    "Jhon Doe",
-    "Alex",
-]
 
 
 class AddOrUpdateDetailClass(tk.Toplevel):
@@ -47,14 +35,14 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         self.date_box.set(self._old_value[0] if self._is_update else 1)
 
         createLabel(self, "Duration:").grid(row=2, column=1, sticky="w", pady=10)
-        self.duration_box = Combobox(self, values=["1 hour", "2 hours", "3 hours"])
+        self.duration_box = Combobox(self, values=DURATIONS)
         self.duration_box.grid(row=2, column=2, sticky="nsew", pady=10)
-        self.duration_box.set(self._old_value[1] if self._is_update else "1 hour")
+        self.duration_box.set(self._old_value[1] if self._is_update else DURATIONS[0])
 
         createLabel(self, "Shift:").grid(row=3, column=1, sticky="w", pady=10)
-        self.shift_box = Combobox(self, values=["Morning", "Day", "Evening", "Night"])
+        self.shift_box = Combobox(self, values=SHIFTS)
         self.shift_box.grid(row=3, column=2, sticky="nsew", pady=10)
-        self.shift_box.set(self._old_value[2] if self._is_update else "Morning")
+        self.shift_box.set(self._old_value[2] if self._is_update else SHIFTS[0])
 
         createLabel(self, "Instructor:").grid(row=4, column=1, sticky="w", pady=10)
 
@@ -67,8 +55,11 @@ class AddOrUpdateDetailClass(tk.Toplevel):
             listbox_frame, orient="vertical", command=self.instructor.yview
         )
         self.instructor.config(yscrollcommand=scrollbar.set)
+        self.instructors = self.d_b.get_all(
+            columns_name=("id", "name"), table_name=TABLENAME.INSTRUCTORS.value
+        )
 
-        for instructor in instructors:
+        for id, instructor in self.instructors:
             self.instructor.insert("end", instructor)
 
         # Pack the Listbox and Scrollbar in the Frame
@@ -76,9 +67,9 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         scrollbar.pack(side="right", fill="y")
 
         createLabel(self, "Status:").grid(row=5, column=1, sticky="w", pady=10)
-        self.status = Combobox(self, values=["Available", "Full", "Not Available"])
+        self.status = Combobox(self, values=STATUS)
         self.status.grid(row=5, column=2, sticky="nsew", pady=10)
-        self.status.set(self._old_value[4] if self._is_update else "Available")
+        self.status.set(self._old_value[4] if self._is_update else STATUS[0])
 
         createLabel(self, "Available spot:").grid(row=6, column=1, sticky="w", pady=10)
         self.entry = tk.Entry(self)
@@ -96,21 +87,39 @@ class AddOrUpdateDetailClass(tk.Toplevel):
             date, duration, shift, status, available_spot, instructors = (
                 self._get_values()
             )
+            columns_name = [
+                "date",
+                "duration",
+                "shift",
+                "status",
+                "available_spots",
+            ]
+            data = (date, duration, shift, status, available_spot)
+
             if self._is_update:
-                self.d_b.update_class_details(
-                    self._record_id,
-                    date,
-                    duration,
-                    shift,
-                    status,
-                    available_spot,
-                    instructors,
+                res = self.d_b.update(
+                    columns_name,
+                    data,
+                    (self._record_id,),
+                    table_name=TABLENAME.CLASS_SCHEDULE.value,
+                    where_col=("id",),
                 )
+                if res is None:
+                    messagebox.showerror("Error", f"Something went wrong:{res}")
+                    return
+
                 messagebox.showinfo("Success", "Class details updated successfully")
             else:
-                self.d_b.add_class_details(
-                    date, duration, shift, status, available_spot, instructors
+
+                res = self.d_b.insert(
+                    data,
+                    columns_name,
+                    table_name=TABLENAME.CLASS_SCHEDULE.value,
+                    instructors_id=instructors,
                 )
+                if res is None:
+                    messagebox.showerror("Error", f"Something went wrong:{res}")
+                    return
                 messagebox.showinfo("Success", "Class details added successfully")
         except Exception as e:
             print(f"An error occurred while processing the form: {e}")
@@ -124,7 +133,8 @@ class AddOrUpdateDetailClass(tk.Toplevel):
             tuple: Date, Duration, Shift, Status, Available spot, Selected instructors
         """
         try:
-            selected_instructors_id = self.instructor.curselection()
+            selected_instructors_index = self.instructor.curselection()
+
             date = self.date_box.get()
             if date == " ":
                 messagebox.showerror("Validation Error", "Date must be filled out")
@@ -142,13 +152,26 @@ class AddOrUpdateDetailClass(tk.Toplevel):
                 messagebox.showerror("Validation Error", "Status must be filled out")
                 return None
             available_spot = self.entry.get()
-            if not available_spot.isdigit() or int(available_spot) < 0:
-                messagebox.showerror(
-                    "Validation Error", "Available spot must be a positive integer"
-                )
-                return None
-            selected_instructors = [instructors[id] for id in selected_instructors_id]
-            return (date, duration, shift, status, available_spot, selected_instructors)
+            if available_spot == " ":
+                available_spot = None
+            else:
+                if int(available_spot) < 0:
+                    messagebox.showerror(
+                        "Validation Error", "Available spot must be a positive integer"
+                    )
+                    return None
+            selected_instructors_id = [
+                self.instructors[id][0] for id in selected_instructors_index
+            ]
+            today = datetime.now().date().strftime("%Y-%m-%d")
+            return (
+                today,
+                duration,
+                shift,
+                status,
+                available_spot,
+                selected_instructors_id,
+            )
         except Exception as e:
             print(f"An error occurred while getting values: {e}")
             return None

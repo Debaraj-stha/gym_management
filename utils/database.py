@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime, timedelta
+from utils.constraints import DURATIONS, SHIFTS, TABLENAME
 from utils.logger import logger
 
 from utils.helper import send_email
@@ -14,43 +15,84 @@ class Database:
         self._create_db()
 
     def _create_db(self):
-        self.cursor.execute(
-            """CREATE TABLE IF NOT EXISTS customers (
+        try:
+            self.cursor.execute(
+                """CREATE TABLE IF NOT EXISTS customers (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    phone TEXT NOT NULL,
+                    subscription_type TEXT NOT NULL,
+                    subscription_date DATE DEFAULT(datetime('now', 'utc')),
+                    membership_expiry DATE NOT NULL,
+                    subscription_price REAL NOT NULL,
+                    total_amount_paid REAL DEFAULT 0,
+                    last_payment_date DATE DEFAULT NULL
+                )"""
+            )
+
+            self.conn.commit()
+
+            self.cursor.execute(
+                """CREATE TABLE IF NOT EXISTS attendance (
+                    id INTEGER PRIMARY KEY,
+                    check_in DATE DEFAULT(datetime('now', 'utc')),
+                    checkout DATE DEFAULT NULL,
+                    customer_id INTEGER,
+                    FOREIGN KEY (customer_id) REFERENCES customers(id)
+                )"""
+            )
+
+            self.conn.commit()
+            self.cursor.execute(
+                """
+                                CREATE TABLE IF NOT EXISTS instructors(
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    email TEXT UNIQUE NOT NULL,
+                                    phone TEXT NOT NULL,
+                                    joined_at DATE DEFAULT(datetime('now', 'utc')),
+                                    rate REAL DEFAULT 7000
+
+                                )
+                                """
+            )
+            self.conn.commit()
+            self.cursor.execute(
+                f"""
+            CREATE TABLE IF NOT EXISTS class_schedule (
                 id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                phone TEXT NOT NULL,
-                subscription_type TEXT NOT NULL,
-                subscription_date DATE DEFAULT(datetime('now', 'utc')),
-                membership_expiry DATE NOT NULL,
-                subscription_price REAL NOT NULL,
-                total_amount_paid REAL DEFAULT 0,
-                last_payment_date DATE DEFAULT NULL
-            )"""
-        )
+                date DATE DEFAULT (datetime('now', 'utc')),
+                duration TEXT CHECK(duration IN {DURATIONS}) DEFAULT '1 hour',
+                shift TEXT CHECK(shift IN {SHIFTS}) DEFAULT 'morning',
+                status TEXT CHECK(status IN ) DEFAULT 'available',
+                available_spots INTEGER DEFAULT 30
+      
+            )
+            """
+            )
+            self.conn.commit()
+            self.cursor.execute(
+                """
+            CREATE TABLE IF NOT EXISTS class_schedule_instructors (
+                class_schedule_id INTEGER,
+                instructor_id INTEGER,
+                FOREIGN KEY (class_schedule_id) REFERENCES class_schedule(id),
+                FOREIGN KEY (instructor_id) REFERENCES instructors(id),
+                PRIMARY KEY (class_schedule_id, instructor_id)
+            )
+            """
+            )
+            self.conn.commit()
 
-        self.conn.commit()
-
-        self.cursor.execute(
-            """CREATE TABLE IF NOT EXISTS attendance (
-                id INTEGER PRIMARY KEY,
-                check_in DATE DEFAULT(datetime('now', 'utc')),
-                checkout DATE DEFAULT NULL,
-                customer_id INTEGER,
-                FOREIGN KEY (customer_id) REFERENCES customers(id)
-            )"""
-        )
-
-        self.conn.commit()
+        except Exception as e:
+            logger.info(f"An error occurred while creating database: {e}")
 
     def close(self):
         self.conn.close()
 
     def insert(
-        self,
-        values: tuple,
-        columns_name: list,
-        table_name: str = "customers",
+        self, values: tuple, columns_name: list, table_name: str = "customers", **kwargs
     ):
         """
         Add a new customer to the database.
@@ -59,21 +101,36 @@ class Database:
             values (tuple): A tuple containing the customer's details: (name, email, phone, subscription_type, membership_expiry, subscription_price,total_amount_paid).
             columns_name (list): A list of column names in the database.
             table_name (str): The name of the table.Default is customers.
+
+
         Returns:
             int: The ID of the inserted customer if successful, None otherwise.
+            str: An error message if any occurred.
         """
         try:
             col = ",".join(columns_name)
             placeholder = ",".join(["?"] * len(columns_name))
+            query = f"""INSERT INTO {table_name} ({col}) VALUES ({placeholder})"""
+            print(query)
+
             self.cursor.execute(
-                f"""INSERT INTO {table_name} ({col}) VALUES ({placeholder})""",
+                query,
                 values,
             )
             self.conn.commit()
-            return self.cursor.lastrowid
+            schedule_id = self.cursor.lastrowid
+            if "instructors_id" in kwargs:
+                values = [(schedule_id, id) for id in kwargs["instructors_id"]]
+                print(values)
+                query = f"""INSERT INTO class_schedule_instructors (class_schedule_id, instructor_id) VALUES (?,?)"""
+                self.cursor.executemany(query, values)
+                self.conn.commit()
+
+            return schedule_id
         except sqlite3.Error as e:
-            print(e)
+
             logger.info(f"An error occurred: {e}")
+            return str(e)
 
     def total_records(
         self,
@@ -334,21 +391,29 @@ class Database:
             logger.info(f"An error occurred: {e}")
             return []
 
-    def insert_multiple(self, customers: list, table_name: str = "customers"):
+    def insert_multiple(
+        self, records: list, columns_name: list, table_name: str = "customers"
+    ):
         """
         Inserts multiple customer records into the database.
 
         Args:
-            customers (list): A list of customer tuple, where each tuple contains customer details.
+            rescords (list): A list of records tuple, where each tuple contains records details.
         """
         try:
+            col = ",".join(columns_name)
+            placeholders = ",".join(["?"] * len(columns_name))
+
+            query = f"INSERT INTO {table_name} ({col}) VALUES ({placeholders})"
+
             self.cursor.executemany(
-                "INSERT INTO customers (name, email, membership_expiry, last_payment_date, total_amount_paid, subscription_type, subscription_price, subscription_date,last_payment_date) VALUES (?,?,?,?,?,?,?,?,?)",
-                customers,
+                query,
+                records,
             )
             self.conn.commit()
         except sqlite3.Error as e:
             logger.info(f"An error occurred: {e}")
+            print(e)
 
     def get_customer_by_pending_payment(
         self,
@@ -524,11 +589,46 @@ class Database:
             print(e)
             return None
 
-    def get_all(self, columns_name="*", table_name="customers"):
+    def get_all(self, columns_name: tuple = "*", table_name="customers"):
         try:
             col = ",".join(columns_name) if columns_name != ("*",) else "*"
             query = f"SELECT {col} FROM {table_name}"
             self.cursor.execute(query)
+            results = self.cursor.fetchall()
+            return results
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred while querying the database: {e}")
+            print(e)
+            return None
+
+    from datetime import datetime
+
+    def get_schedule(self, limit, offset):
+        today = datetime.now().date()
+        try:
+            query = f"""
+            SELECT 
+                t1.id as schedule_id,
+                t1.date,
+                t1.duration,
+                t1.shift,
+                t1.status,
+                t1.available_spots,
+                t3.name as instructor_name,
+                t3.id as instructor_id
+            FROM 
+                {TABLENAME.CLASS_SCHEDULE.value} as t1
+            LEFT JOIN 
+                {TABLENAME.CLASS_SCHEDULE_INSTRUCTORS.value} as t2 ON t1.id = t2.class_schedule_id
+            LEFT JOIN 
+                {TABLENAME.INSTRUCTORS.value} as t3 ON t2.instructor_id = t3.id
+            WHERE 
+                DATE(t1.date) = ?
+            LIMIT ? OFFSET ?
+            """
+
+            params = (today, limit, offset)
+            self.cursor.execute(query, params)
             results = self.cursor.fetchall()
             return results
         except sqlite3.Error as e:

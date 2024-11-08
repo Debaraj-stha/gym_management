@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter.ttk import Frame
 
 from files.add_update_class_details import AddOrUpdateDetailClass
+from utils.constraints import TABLENAME
 from utils.widgets import backButton, createButton, createLabel
 
 
@@ -10,7 +11,17 @@ class ClassScheduleView(tk.Frame):
         super().__init__(parent)
         self.controller = controller
         self.db = db
+        self.schedules = []
+        self.limit = 10
+        self.offset = 0
+        self._get_schedules()
         self.create_ui()
+
+    def _get_schedules(self):
+        # Fetching all schedules from the database
+        res = self.db.get_schedule(self.limit, self.offset)
+        self.schedules = res
+        print(res)
 
     def create_ui(self):
         # Configure the main frame columns
@@ -29,6 +40,7 @@ class ClassScheduleView(tk.Frame):
         self._config_grid(toolrow, columns=2)
         backButton(toolrow, self.controller).grid(row=0, column=0, sticky="w", pady=10)
 
+        # print(res)
         createButton(
             toolrow,
             "Add Class",
@@ -46,9 +58,9 @@ class ClassScheduleView(tk.Frame):
             "Date",
             "Duration",
             "Shift",
-            "Instructor",
             "Status",
             "Available spot",
+            "Instructor",
         ]
         self.schedule_tree = tk.ttk.Treeview(
             content_frame, columns=columns, show="headings"
@@ -59,17 +71,17 @@ class ClassScheduleView(tk.Frame):
         self.schedule_tree.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
         # Add dummy data to the Treeview
-        for i in range(10):
+        for schedule in self.schedules:
             self.schedule_tree.insert(
                 "",
                 "end",
                 values=(
-                    f"{i+1}",
-                    f"Time {i+1}",
-                    f"Class {i+1}",
-                    f"Instructor {i+1}",
-                    "Available",
-                    "5",
+                    schedule[1],
+                    schedule[2],
+                    schedule[3],
+                    schedule[4],
+                    schedule[5],
+                    schedule[6],
                 ),
             )
         # binding event to treeview
