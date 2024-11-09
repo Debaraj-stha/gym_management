@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter.ttk import Frame
 
 from files.add_update_class_details import AddOrUpdateDetailClass
+from files.add_update_instructor import AddUpdateInstructor
 from utils.constraints import TABLENAME
 from utils.widgets import backButton, createButton, createLabel
 
@@ -21,7 +22,6 @@ class ClassScheduleView(tk.Frame):
         # Fetching all schedules from the database
         res = self.db.get_schedule(self.limit, self.offset)
         self.schedules = res
-        print(res)
 
     def create_ui(self):
         # Configure the main frame columns
@@ -41,12 +41,25 @@ class ClassScheduleView(tk.Frame):
         backButton(toolrow, self.controller).grid(row=0, column=0, sticky="w", pady=10)
 
         # print(res)
+        button_row = tk.Frame(toolrow)
+        button_row.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=10)
         createButton(
-            toolrow,
+            button_row,
             "Add Class",
             state="active",
             command=lambda: AddOrUpdateDetailClass(self.db),
         ).grid(row=1, column=0, sticky="w")
+        createButton(
+            button_row,
+            "Add Instructor",
+            state="active",
+            command=lambda: AddUpdateInstructor(self.db),
+        ).grid(row=1, column=1, sticky="w")
+        createButton(
+            button_row,
+            "Refresh",
+            command=lambda: self._refresh,
+        ).grid(row=1, column=2, sticky="w")
 
         self._config_grid(content_frame, columns=2)
 
@@ -70,22 +83,30 @@ class ClassScheduleView(tk.Frame):
             self.schedule_tree.column(column, anchor="center")
         self.schedule_tree.grid(row=1, column=0, columnspan=2, sticky="nsew")
 
-        # Add dummy data to the Treeview
-        for schedule in self.schedules:
-            self.schedule_tree.insert(
-                "",
-                "end",
-                values=(
-                    schedule[1],
-                    schedule[2],
-                    schedule[3],
-                    schedule[4],
-                    schedule[5],
-                    schedule[6],
-                ),
-            )
+        self._display_schedules()
         # binding event to treeview
         self.schedule_tree.bind("<Double-Button-1>", self._on_treeview_double_click)
+
+    def _refresh(self):
+        self._get_schedules()
+        self.schedule_tree.delete(*self.schedule_tree.get_children())
+        self._display_schedules()
+
+    def _display_schedules(self):
+        if self.schedules is not None:
+            for schedule in self.schedules:
+                self.schedule_tree.insert(
+                    "",
+                    "end",
+                    values=(
+                        schedule[1],
+                        schedule[2],
+                        schedule[3],
+                        schedule[4],
+                        schedule[5],
+                        schedule[6],
+                    ),
+                )
 
     def _on_treeview_double_click(self, event):
         try:
@@ -94,7 +115,6 @@ class ClassScheduleView(tk.Frame):
             if selected_item is None:
                 return
             selected_item_values = self.schedule_tree.item(selected_item, "values")
-            print(selected_item_values)
             AddOrUpdateDetailClass(self.db, selected_item_values, selected_item)
 
         except Exception as e:

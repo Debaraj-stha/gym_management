@@ -80,6 +80,10 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         self.entry.grid(row=6, column=2, sticky="nsew", pady=10)
         self.entry.insert(0, self._old_value[5])
 
+        createButton(self, "Save", command=self._process).grid(
+            row=7, column=1, columnspan=3, sticky="ew", pady=10
+        )
+
     def _pick_date(self, *args):
         def callback(selected_ddat):
             self.date_box.set(selected_ddat)
@@ -98,7 +102,13 @@ class AddOrUpdateDetailClass(tk.Toplevel):
                 "status",
                 "available_spots",
             ]
-            data = (date, duration, shift, status, available_spot)
+            if available_spot is not None:
+
+                data = (date, duration, shift, status, available_spot)
+
+            else:
+                data = (date, duration, shift, status)
+                columns_name.pop()
 
             if self._is_update:
                 res = self.d_b.update(

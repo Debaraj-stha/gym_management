@@ -87,7 +87,7 @@ def create_page_numbers(
         total_buttons = total_records // limit
         if total_records % limit != 0:
             total_buttons += 1
-        row_frame.grid(row=row_index, column=0, sticky="ew")
+        # row_frame.grid(row=row_index, column=0, sticky="ew")
 
         createLabel(row_frame, text="Page:").grid(row=0, column=0, sticky="ew")
 

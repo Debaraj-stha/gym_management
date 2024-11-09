@@ -183,7 +183,8 @@ class AddMember(tk.Toplevel):
             membership_expiry = datetime.now() + timedelta(days=365)
         amount_paid_date = datetime.now()
         col = (
-            "name" "email",
+            "name",
+            "email",
             "phone",
             "subscription_type",
             "membership_expiry",

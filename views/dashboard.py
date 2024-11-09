@@ -153,12 +153,20 @@ class Dashboard(tk.Frame):
             height=3,
         )
         button4.pack(pady=10)
-
         button5 = createButton(
+            right_frame,
+            text="Instructors",
+            command=lambda: self.controller.show_frame("InstructorView"),
+            width=20,
+            height=3,
+        )
+        button5.pack(pady=10)
+
+        button6 = createButton(
             right_frame,
             text="Setting",
             command=lambda: SettingView(parent=self.controller),
             width=20,
             height=3,
         )
-        button5.pack(pady=10)
+        button6.pack(pady=10)

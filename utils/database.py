@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime, timedelta
+from files.database_schemas import ATTENDANCE_SCHEMA, CUSTOMER_SCHEMA
 from utils.constraints import DURATIONS, SHIFTS, TABLENAME
 from utils.logger import logger
 
@@ -12,81 +13,17 @@ class Database:
 
         self.cursor = self.conn.cursor()
 
-        self._create_db()
-
-    def _create_db(self):
+    def create_table(self, table_name, schema):
         try:
             self.cursor.execute(
-                """CREATE TABLE IF NOT EXISTS customers (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    email TEXT UNIQUE NOT NULL,
-                    phone TEXT NOT NULL,
-                    subscription_type TEXT NOT NULL,
-                    subscription_date DATE DEFAULT(datetime('now', 'utc')),
-                    membership_expiry DATE NOT NULL,
-                    subscription_price REAL NOT NULL,
-                    total_amount_paid REAL DEFAULT 0,
-                    last_payment_date DATE DEFAULT NULL
+                f"""CREATE TABLE IF NOT EXISTS {table_name} (
+                   {schema}
                 )"""
             )
-
             self.conn.commit()
-
-            self.cursor.execute(
-                """CREATE TABLE IF NOT EXISTS attendance (
-                    id INTEGER PRIMARY KEY,
-                    check_in DATE DEFAULT(datetime('now', 'utc')),
-                    checkout DATE DEFAULT NULL,
-                    customer_id INTEGER,
-                    FOREIGN KEY (customer_id) REFERENCES customers(id)
-                )"""
-            )
-
-            self.conn.commit()
-            self.cursor.execute(
-                """
-                                CREATE TABLE IF NOT EXISTS instructors(
-                                    id INTEGER PRIMARY KEY,
-                                    name TEXT NOT NULL,
-                                    email TEXT UNIQUE NOT NULL,
-                                    phone TEXT NOT NULL,
-                                    joined_at DATE DEFAULT(datetime('now', 'utc')),
-                                    rate REAL DEFAULT 7000
-
-                                )
-                                """
-            )
-            self.conn.commit()
-            self.cursor.execute(
-                f"""
-            CREATE TABLE IF NOT EXISTS class_schedule (
-                id INTEGER PRIMARY KEY,
-                date DATE DEFAULT (datetime('now', 'utc')),
-                duration TEXT CHECK(duration IN {DURATIONS}) DEFAULT '1 hour',
-                shift TEXT CHECK(shift IN {SHIFTS}) DEFAULT 'morning',
-                status TEXT CHECK(status IN ) DEFAULT 'available',
-                available_spots INTEGER DEFAULT 30
-      
-            )
-            """
-            )
-            self.conn.commit()
-            self.cursor.execute(
-                """
-            CREATE TABLE IF NOT EXISTS class_schedule_instructors (
-                class_schedule_id INTEGER,
-                instructor_id INTEGER,
-                FOREIGN KEY (class_schedule_id) REFERENCES class_schedule(id),
-                FOREIGN KEY (instructor_id) REFERENCES instructors(id),
-                PRIMARY KEY (class_schedule_id, instructor_id)
-            )
-            """
-            )
-            self.conn.commit()
-
         except Exception as e:
             logger.info(f"An error occurred while creating database: {e}")
+            print(e)
 
     def close(self):
         self.conn.close()
@@ -509,8 +446,8 @@ class Database:
         columns_name: list,
         values: tuple,
         where_value: tuple,
-        table_name="customers",
         where_col=tuple,
+        table_name="customers",
     ):
         try:
 
@@ -607,7 +544,7 @@ class Database:
         today = datetime.now().date()
         try:
             query = f"""
-            SELECT 
+            SELECT DISTINCT
                 t1.id as schedule_id,
                 t1.date,
                 t1.duration,
@@ -623,11 +560,17 @@ class Database:
             LEFT JOIN 
                 {TABLENAME.INSTRUCTORS.value} as t3 ON t2.instructor_id = t3.id
             WHERE 
-                DATE(t1.date) = ?
+                DATE(t1.date) = ? 
+                OR (
+                    DATE(t1.date)<?
+                    AND NOT EXISTS(
+                        SELECT 1 FROM {TABLENAME.CLASS_SCHEDULE.value} WHERE DATE(date)=?
+                    )
+                )
             LIMIT ? OFFSET ?
             """
 
-            params = (today, limit, offset)
+            params = (today, today, today, limit, offset)
             self.cursor.execute(query, params)
             results = self.cursor.fetchall()
             return results

@@ -4,8 +4,17 @@ from dotenv import load_dotenv
 import os
 
 
+from files.database_schemas import (
+    ATTENDANCE_SCHEMA,
+    CLASS_SCHEDULE_INSTRUCTOR_SCHEMA,
+    CLASS_SCHEDULE_SCHEMA,
+    CUSTOMER_SCHEMA,
+    INSTRUCTOR_SCHEMA,
+)
+from utils.constraints import TABLENAME
 from utils.environment_file import get_env, set_env
 from views.dashboard import Dashboard
+from views.instructor_view import InstructorView
 from views.member_view import MembersView
 from views.attendance_view import AttendanceView
 from views.billing_view import BillingView
@@ -19,6 +28,13 @@ class GymManagementApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.db = Database()
+        self.db.create_table(TABLENAME.ATTENDANCE.value, ATTENDANCE_SCHEMA)
+        self.db.create_table(TABLENAME.CUSTOMERS.value, CUSTOMER_SCHEMA)
+        self.db.create_table(TABLENAME.INSTRUCTORS.value, INSTRUCTOR_SCHEMA)
+        self.db.create_table(TABLENAME.CLASS_SCHEDULE.value, CLASS_SCHEDULE_SCHEMA)
+        self.db.create_table(
+            TABLENAME.CLASS_SCHEDULE_INSTRUCTORS.value, CLASS_SCHEDULE_INSTRUCTOR_SCHEMA
+        )
         logger.debug("Initializing software")
         # loading environment file
         load_dotenv()
@@ -71,6 +87,7 @@ class GymManagementApp(tk.Tk):
             AttendanceView,
             BillingView,
             ClassScheduleView,
+            InstructorView,
         ):
             page_name = F.__name__
             frame = F(parent=container, controller=self, db=self.db)
