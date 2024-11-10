@@ -3,6 +3,7 @@ from tkinter import messagebox
 
 from files.add_update_instructor import AddUpdateInstructor
 from utils.constraints import TABLENAME
+from utils.helper import config_grid
 from utils.widgets import backButton, create_buttons, create_page_numbers, createButton
 
 
@@ -22,7 +23,7 @@ class InstructorView(tk.Frame):
         )
         print(self.total_records)
         self._get_instructors()
-        self._config_grid(self, 8)
+        config_grid(self, 8)
         self.create_ui()
 
     def _get_instructors(self):
@@ -84,10 +85,6 @@ class InstructorView(tk.Frame):
         self.offset = 0
         self._get_instructors()
         self._fill_tree()
-
-    def _config_grid(self, frame: tk.Frame, col, row=5):
-        for i in range(col):
-            frame.columnconfigure(i, weight=1)
 
     def change_page(self, page):
         if page == self.current_page:

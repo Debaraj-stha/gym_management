@@ -16,12 +16,12 @@ from views.single_customer_attendance import SingleCustomer
 class AttendanceView(tk.Frame):
     def __init__(self, parent, controller, db):
         super().__init__(parent)
-        self.controller = controller
-        self.db = db
+        self._controller = controller
+        self._db = db
         self.limit = 3
         self.offset = 0
         self.current_page = 1
-        self.total_records = self.db.total_records()
+        self.total_records = self._db.total_records()
         self.paginated_members = []
         self.show_dots = False
         self.has_prev = False
@@ -30,12 +30,12 @@ class AttendanceView(tk.Frame):
         self.customers = []
         self._paginate()
 
-        # res = self.db.delete(("id",), (7,), table_name="attendance")
+        # res = self._db.delete(("id",), (7,), table_name="attendance")
         # print(res)
         self.create_ui()
 
     def _paginate(self):
-        self.customers = self.db.join(
+        self.customers = self._db.join(
             ["customers", "attendance"],
             limit=self.limit,
             offset=self.offset,
@@ -56,7 +56,7 @@ class AttendanceView(tk.Frame):
         self.grid_columnconfigure(2, weight=1)
         self.grid_columnconfigure(3, weight=1)
         self.grid_columnconfigure(4, weight=1)
-        backButton(self, self.controller).grid(row=0, column=0, sticky="ew")
+        backButton(self, self._controller).grid(row=0, column=0, sticky="ew")
         today = datetime.today()
         createLabel(toolrow, f'Today:{today.strftime("%Y-%m-%d")}').grid(
             row=1, column=1, sticky="w"
@@ -200,7 +200,7 @@ class AttendanceView(tk.Frame):
     def _on_row_click(self, customer):
         try:
 
-            SingleCustomer(self.db, customer)
+            SingleCustomer(self._db, customer)
         except Exception as e:
             logger.info(f"An exception occurred:{e}")
 
@@ -212,7 +212,7 @@ class AttendanceView(tk.Frame):
             col = ["check_in", "customer_id"]
             check_in = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             values = (check_in, customer_id)
-            res = self.db.insert(values, col, table_name)
+            res = self._db.insert(values, col, table_name)
             # debugging result
             print(res)
             if res is None:
@@ -232,7 +232,7 @@ class AttendanceView(tk.Frame):
             ]
             today_date = datetime.now().strftime("%Y-%m-%d")
 
-            attendance_id = self.db.get_specific(
+            attendance_id = self._db.get_specific(
                 col,
                 (
                     today_date,
@@ -248,7 +248,7 @@ class AttendanceView(tk.Frame):
                 return
             check_out = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            res = self.db.update(
+            res = self._db.update(
                 ["checkout"],
                 (check_out,),
                 (attendance_id,),
@@ -281,7 +281,7 @@ class AttendanceView(tk.Frame):
             self.current_page = 1
             self.offset = 0
 
-            res = self.db.search(
+            res = self._db.search(
                 query,
                 column_names=[
                     ["t1", "id"],
@@ -330,7 +330,7 @@ class AttendanceView(tk.Frame):
         if self.is_get_result and event.keycode == 22:
             self.search_entry.delete(0, tk.END)
             self.customers = self.old_value
-            self.total_records = self.db.total_records()
+            self.total_records = self._db.total_records()
 
             if hasattr(self, "sub_row") and self.sub_row:
                 self.sub_row.grid_forget()

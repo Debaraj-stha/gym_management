@@ -1,4 +1,4 @@
-from tkinter import Entry
+from tkinter import Entry, Frame
 
 import smtplib
 
@@ -47,3 +47,13 @@ def send_email(to, subject, message):
         logger.info(f"Error sending email:{e}")
         print("failed")
         return False
+
+
+def config_grid(frame: Frame, col):
+    for i in range(col):
+        frame.columnconfigure(i, weight=1)
+
+
+def config_row(frame: Frame, row):
+    for i in range(row):
+        frame.rowconfigure(i, weight=1, pad=10)

@@ -10,6 +10,7 @@ from files.database_schemas import (
     CLASS_SCHEDULE_SCHEMA,
     CUSTOMER_SCHEMA,
     INSTRUCTOR_SCHEMA,
+    INVOICE_SCHEMA,
 )
 from utils.constraints import TABLENAME
 from utils.environment_file import get_env, set_env
@@ -35,6 +36,7 @@ class GymManagementApp(tk.Tk):
         self.db.create_table(
             TABLENAME.CLASS_SCHEDULE_INSTRUCTORS.value, CLASS_SCHEDULE_INSTRUCTOR_SCHEMA
         )
+        self.db.create_table(TABLENAME.INVOICE.value, INVOICE_SCHEMA)
         logger.debug("Initializing software")
         # loading environment file
         load_dotenv()

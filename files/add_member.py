@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from numpy import delete
 from pyparsing import col
 
+from utils.constraints import TABLENAME
 from utils.helper import focusIn, focusOut
 from utils.widgets import createButton, createLabel
 from resources.data import subscription_value
@@ -189,7 +190,6 @@ class AddMember(tk.Toplevel):
             "subscription_type",
             "membership_expiry",
             "subscription_price",
-            "total_amount_paid",
             "last_payment_date",
         )
         customer = (
@@ -199,7 +199,6 @@ class AddMember(tk.Toplevel):
             subscription,
             membership_expiry,
             total_amount,
-            amount_paid,
             amount_paid_date,
         )
         row_id = self.db.insert(customer, col)
@@ -211,6 +210,15 @@ class AddMember(tk.Toplevel):
             self.subscription_charge_box.set("...")
             self.amount_paid_entry.delete(0, "end")
             self.subscription_charge_box.set("...")
+            res = self.db.insert(
+                (row_id, total_amount),
+                ("customer_id", "amount_to_pay"),
+                table_name=TABLENAME.INVOICE.value,
+            )
+            if res is not None:
+                messagebox.showinfo("Success", "Customer added successfully")
+            else:
+                messagebox.showerror("Error", "Failed to add invoice")
 
         self.after(2000, self._enable_button)
 

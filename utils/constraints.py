@@ -7,6 +7,7 @@ class TABLENAME(Enum):
     CLASS_SCHEDULE = "class_schedule"
     CLASS_SCHEDULE_INSTRUCTORS = "class_schedule_instructors"
     ATTENDANCE = "attendance"
+    INVOICE = "invoice"
 
 
 SHIFTS = ("morning", "day", "evening", "night")

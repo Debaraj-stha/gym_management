@@ -21,6 +21,8 @@ class Database:
                 )"""
             )
             self.conn.commit()
+            self.cursor.execute(f"DROP TABLE IF EXISTS {TABLENAME.INVOICE.value}")
+
         except Exception as e:
             logger.info(f"An error occurred while creating database: {e}")
             print(e)
@@ -571,6 +573,47 @@ class Database:
             """
 
             params = (today, today, today, limit, offset)
+            self.cursor.execute(query, params)
+            results = self.cursor.fetchall()
+            return results
+        except sqlite3.Error as e:
+            logger.info(f"An error occurred while querying the database: {e}")
+            print(e)
+            return None
+
+    def search_invoices(
+        self,
+        search_query: str = "",
+        columns_name: tuple | list = "*",
+        search_columns=["name", "id", "phone", "email"],
+        limit=10,
+        offset=0,
+        is_searching=True,
+    ):
+        try:
+            if isinstance(columns_name, (list, tuple)):
+                col = ",".join(
+                    [
+                        (
+                            f"c.{col}"
+                            if isinstance(columns_name, str)
+                            else f"{col[0]}.{col[1]}"
+                        )
+                        for col in columns_name
+                    ]
+                )
+            like_clause = [f"{col} LIKE ?" for col in search_columns]
+            like_query = " OR ".join(like_clause)
+            params = []
+            query = f"SELECT {col} FROM {TABLENAME.CUSTOMERS.value} as c RIGHT JOIN {TABLENAME.INVOICE.value} as i on c.id=i.customer_id"
+            if is_searching:
+                query += f" WHERE {like_query}"
+
+                params = [f"%{search_query}%"] * len(search_columns)
+            query += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+            print(params)
+
             self.cursor.execute(query, params)
             results = self.cursor.fetchall()
             return results
