@@ -1,18 +1,28 @@
+import re
 from tkinter import Entry, Frame
 
 import smtplib
+import os
+import pandas as pd
 
 from utils.environment_file import get_env
 from .logger import logger
 
 
 def focusIn(event):
+
     entry = event.widget
     if isinstance(entry, Entry):
         entry.delete(0, "end")
 
 
 def focusOut(event, placeholder=None):
+    """
+    Placeholder for entry widget
+    Args:
+        event (Event): event object
+        placeholder (string): placeholder text
+    """
     entry = event.widget
     if isinstance(entry, Entry):
         if entry.get() == "":
@@ -49,11 +59,77 @@ def send_email(to, subject, message):
         return False
 
 
-def config_grid(frame: Frame, col):
+def config_grid_col(frame: Frame, col):
+    """
+    Configure grid columns
+    Args:
+        frame (Frame): grid container
+        col (int): number of columns to configure
+    """
     for i in range(col):
         frame.columnconfigure(i, weight=1)
 
 
-def config_row(frame: Frame, row):
+def config_grid_row(frame: Frame, row):
+    """
+    Configure grid rows
+    Args:
+        frame (Frame): grid container
+        row (int): number of rows to configure
+    """
+
     for i in range(row):
         frame.rowconfigure(i, weight=1, pad=10)
+
+
+def export_to_csv(data, filename: str, schema):
+    try:
+        # Fetch data to export
+
+        print("Exporting to CSV")
+        columns_name = get_table_column_name(schema)
+
+        df = pd.DataFrame(data, columns=columns_name)
+
+        # Define the target directory path within the current working directory
+        directory = make_directory()
+        # Define the complete file path
+        file_path = os.path.join(directory, filename)
+
+        # Save CSV file to the specified directory
+        df.to_csv(file_path, index=False)
+
+        print(f"CSV exported successfully to {file_path}")
+
+    except Exception as e:
+        print(f"An error occurred while exporting to CSV: {e}")
+
+
+def make_directory(directory="data"):
+    """ ""
+    Define the target directory path within the current working directory
+    """
+    directory = os.path.join(os.getcwd(), directory)
+
+    # Create directory if it doesn't exist
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return directory
+
+
+def get_table_column_name(schema):
+    """
+    Extract table column names from the given schema
+    """
+    try:
+        # Extract column names from the schema using regular expressions.
+        columns = re.findall(r"(\w+)\s+\w+", schema)
+        # Exclude system-defined columns such as PRIMARY, FOREIGN, DEFAULT, and REFERENCES from the list of column names.
+        col = [
+            col
+            for col in columns
+            if not col in ("PRIMARY", "FOREIGN", "DEFAULT", "REFERENCES")
+        ]
+        return col
+    except Exception as e:
+        print(f"An error occurred while fetching table column names: {e}")

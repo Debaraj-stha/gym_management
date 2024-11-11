@@ -21,7 +21,7 @@ class Database:
                 )"""
             )
             self.conn.commit()
-            self.cursor.execute(f"DROP TABLE IF EXISTS {TABLENAME.INVOICE.value}")
+            # self.cursor.execute(f"DROP TABLE IF EXISTS {TABLENAME.INVOICE.value}")
 
         except Exception as e:
             logger.info(f"An error occurred while creating database: {e}")
@@ -50,8 +50,6 @@ class Database:
             col = ",".join(columns_name)
             placeholder = ",".join(["?"] * len(columns_name))
             query = f"""INSERT INTO {table_name} ({col}) VALUES ({placeholder})"""
-            print(query)
-
             self.cursor.execute(
                 query,
                 values,
@@ -60,8 +58,8 @@ class Database:
             schedule_id = self.cursor.lastrowid
             if "instructors_id" in kwargs:
                 values = [(schedule_id, id) for id in kwargs["instructors_id"]]
-                print(values)
                 query = f"""INSERT INTO class_schedule_instructors (class_schedule_id, instructor_id) VALUES (?,?)"""
+
                 self.cursor.executemany(query, values)
                 self.conn.commit()
 
@@ -69,7 +67,8 @@ class Database:
         except sqlite3.Error as e:
 
             logger.info(f"An error occurred: {e}")
-            return str(e)
+            print(e)
+            return False
 
     def total_records(
         self,
@@ -528,7 +527,11 @@ class Database:
             print(e)
             return None
 
-    def get_all(self, columns_name: tuple = "*", table_name="customers"):
+    def get_all(
+        self,
+        columns_name: tuple = "*",
+        table_name: TABLENAME = TABLENAME.CUSTOMERS.value,
+    ):
         try:
             col = ",".join(columns_name) if columns_name != ("*",) else "*"
             query = f"SELECT {col} FROM {table_name}"

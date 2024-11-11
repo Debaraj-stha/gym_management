@@ -1,7 +1,7 @@
 from utils.constraints import DURATIONS, SHIFTS, STATUS, TABLENAME
 
 
-CUSTOMER_SCHEMA = """ id INTEGER PRIMARY KEY,
+CUSTOMER_SCHEMA = """id INTEGER PRIMARY KEY,
                     name TEXT NOT NULL,
                     email TEXT UNIQUE NOT NULL,
                     phone TEXT NOT NULL,

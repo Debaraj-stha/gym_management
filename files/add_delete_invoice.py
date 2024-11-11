@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 from utils.constraints import TABLENAME
-from utils.helper import config_grid, config_row
+from utils.helper import config_grid_col, config_grid_row
 from utils.widgets import createButton
 
 
@@ -24,8 +24,8 @@ class AddUpdateInvoice(tk.Toplevel):
         self._amount = tk.DoubleVar(value=0.0)
         self._remaining_amount = tk.DoubleVar()
         self._amount_to_pay = tk.DoubleVar(value=4000)
-        config_grid(self, 3)
-        config_row(self, 5)
+        config_grid_col(self, 3)
+        config_grid_row(self, 5)
         self._create_ui()
 
     def _create_ui(self):

@@ -2,8 +2,9 @@ import tkinter as tk
 from tkinter import messagebox
 
 from files.add_delete_invoice import AddUpdateInvoice
+from files.database_schemas import INVOICE_SCHEMA
 from utils.constraints import TABLENAME
-from utils.helper import config_grid, focusIn, focusOut
+from utils.helper import config_grid_col, export_to_csv, focusIn, focusOut
 from utils.widgets import backButton, create_buttons, create_page_numbers, createButton
 
 
@@ -12,13 +13,13 @@ class BillingView(tk.Frame):
         super().__init__(parent)
         self._controller = controller
         self._db = db
-        self._total_records = 0
+        self._total_records = self._db.total_records(table_name=TABLENAME.INVOICE.value)
         self._limit = 10
         self._offset = 0
         self._current_page = 1
         self._invoices = []
         self._serach_value = tk.StringVar()
-        config_grid(self, 8)
+        config_grid_col(self, 8)
         self._create_ui()
         self._get_invoices()
 
@@ -26,7 +27,7 @@ class BillingView(tk.Frame):
 
         tool_row = tk.Frame(self)
         tool_row.grid(row=1, column=1, columnspan=7, sticky="ew", pady=(10, 10))
-        config_grid(tool_row, 10)
+        config_grid_col(tool_row, 10)
         backButton(tool_row, self._controller).grid(
             row=1, column=0, sticky="ew", pady=10
         )
@@ -43,13 +44,21 @@ class BillingView(tk.Frame):
 
         serach_entry.bind("<KeyRelease>", self._search_customer)
 
+        # createButton(
+        #     tool_row,
+        #     "Generate new Invoice",
+        #     state="active",
+        #     command=lambda: AddUpdateInvoice(self._db),
+        # ).grid(row=2, column=3, sticky="ew")
         createButton(
             tool_row,
-            "Generate new Invoice",
-            state="active",
-            command=lambda: AddUpdateInvoice(self._db),
-        ).grid(row=2, column=3, sticky="ew")
-        createButton(tool_row, "Export to CSV").grid(row=2, column=4, sticky="ew")
+            "Export to CSV",
+            command=lambda: export_to_csv(
+                self._db.get_all(table_name=TABLENAME.INVOICE.value),
+                "invoices.csv",
+                INVOICE_SCHEMA,
+            ),
+        ).grid(row=2, column=4, sticky="ew")
 
         columns = [
             "INVOICE ID",

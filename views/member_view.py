@@ -12,7 +12,9 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 from io import BytesIO
 
+from files.database_schemas import CUSTOMER_SCHEMA, INVOICE_SCHEMA
 from files.update_member import UpdateMember
+from utils.constraints import TABLENAME
 from utils.widgets import (
     backButton,
     create_buttons,
@@ -21,7 +23,7 @@ from utils.widgets import (
     createLabel,
 )
 from files.add_member import AddMember
-from utils.helper import focusIn, focusOut
+from utils.helper import export_to_csv, focusIn, focusOut, get_table_column_name
 
 days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
@@ -154,7 +156,11 @@ class MembersView(tk.Frame):
         button_row = Frame(toolrow)
         button_row.grid(row=3, column=1, columnspan=5, sticky="ew", pady=(10, 0))
         createButton(
-            button_row, "Export as CSV", command=lambda: self._export_to_csv()
+            button_row,
+            "Export as CSV",
+            command=lambda: export_to_csv(
+                self.db.get_all(), "customers.csv", CUSTOMER_SCHEMA
+            ),
         ).grid(row=3, column=1, sticky="nsew", padx=10)
 
         createButton(
@@ -466,27 +472,6 @@ class MembersView(tk.Frame):
 
             self._update_table()
 
-    def _export_to_csv(self):
-        try:
-            # Fetch data to export
-            customers = self.db.get_all()
-            print("Exporting to CSV")
-
-            df = pd.DataFrame(customers)
-
-            # Define the target directory path within the current working directory
-            directory = self._make_directory()
-            # Define the complete file path
-            file_path = os.path.join(directory, "customers.csv")
-
-            # Save CSV file to the specified directory
-            df.to_csv(file_path, index=False)
-
-            print(f"CSV exported successfully to {file_path}")
-
-        except Exception as e:
-            print(f"An error occurred while exporting to CSV: {e}")
-
     def _export_to_json(self, *args):
         try:
             # Fetch data to export
@@ -594,14 +579,3 @@ class MembersView(tk.Frame):
             print(f"Excel exported successfully to {file_path}")
         except Exception as e:
             print(f"An error occurred while exporting to Excel: {e}")
-
-    def _make_directory(self, directory="data"):
-        """ ""
-        Define the target directory path within the current working directory
-        """
-        directory = os.path.join(os.getcwd(), directory)
-
-        # Create directory if it doesn't exist
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        return directory

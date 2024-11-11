@@ -3,7 +3,7 @@ from tkinter import messagebox
 
 from files.add_update_instructor import AddUpdateInstructor
 from utils.constraints import TABLENAME
-from utils.helper import config_grid
+from utils.helper import config_grid_col
 from utils.widgets import backButton, create_buttons, create_page_numbers, createButton
 
 
@@ -23,7 +23,7 @@ class InstructorView(tk.Frame):
         )
         print(self.total_records)
         self._get_instructors()
-        config_grid(self, 8)
+        config_grid_col(self, 8)
         self.create_ui()
 
     def _get_instructors(self):
