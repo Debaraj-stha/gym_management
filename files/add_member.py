@@ -4,8 +4,6 @@ from tkinter import ttk
 import time
 from datetime import datetime, timedelta
 
-from numpy import delete
-from pyparsing import col
 
 from utils.constraints import TABLENAME
 from utils.helper import focusIn, focusOut
@@ -22,7 +20,7 @@ class AddMember(tk.Toplevel):
         self.db = db
         self.last_clicked_time = time.time()
         self.config(padx=10, pady=10)
-        self.title("Add Member")
+        self.title(_("Add Member"))
         self.geometry("500x500")
         self.resizable(False, False)
         self._config_row_col()
@@ -40,7 +38,7 @@ class AddMember(tk.Toplevel):
 
     def create_ui(self):
         # Labels and Entry Widgets
-        createLabel(self, "Name:").grid(
+        createLabel(self, _("Name:")).grid(
             row=1,
             column=1,
             sticky="w",
@@ -57,7 +55,7 @@ class AddMember(tk.Toplevel):
             pady=(0, 10),
         )
 
-        createLabel(self, "Email:").grid(
+        createLabel(self, _("Email:")).grid(
             row=3,
             column=1,
             sticky="w",
@@ -74,7 +72,7 @@ class AddMember(tk.Toplevel):
             pady=(0, 10),
         )
 
-        createLabel(self, "Phone:").grid(
+        createLabel(self, _("Phone:")).grid(
             row=5,
             column=1,
             sticky="w",
@@ -91,7 +89,7 @@ class AddMember(tk.Toplevel):
             pady=(0, 10),
         )
 
-        createLabel(self, "Subscription:").grid(
+        createLabel(self, _("Subscription:")).grid(
             row=7,
             column=1,
             sticky="w",
@@ -102,7 +100,7 @@ class AddMember(tk.Toplevel):
         )
         # Bind the event to the combobox selection change
         self.subscription_combobox.bind("<<ComboboxSelected>>", self._change_fee)
-        self.subscription_combobox.set("Select Subscription")
+        self.subscription_combobox.set(_("Select Subscription"))
 
         self.subscription_combobox.grid(
             row=8,
@@ -110,7 +108,7 @@ class AddMember(tk.Toplevel):
             sticky="ew",
             pady=(0, 10),
         )
-        createLabel(self, "Subscription charge:").grid(
+        createLabel(self, _("Subscription charge:")).grid(
             row=9,
             column=1,
             sticky="w",
@@ -125,7 +123,7 @@ class AddMember(tk.Toplevel):
             pady=(0, 10),
         )
 
-        createLabel(self, "Amount Paid:").grid(
+        createLabel(self, _("Amount Paid:")).grid(
             row=11,
             column=1,
             sticky="w",
@@ -150,7 +148,7 @@ class AddMember(tk.Toplevel):
         # Centering the Button
         self.add_btn = createButton(
             self,
-            "Add Member",
+            _("Add Member"),
             command=self.add,
             state="active",
         )

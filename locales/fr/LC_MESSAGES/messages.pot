@@ -1,0 +1,365 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-11-11 18:41+0545\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: views/dashboard.py:49
+msgid "Active member on"
+msgstr "Membre actif le"
+
+#: views/dashboard.py:93
+msgid "Member left on"
+msgstr "Membre parti le"
+
+#: views/dashboard.py:126
+msgid "Members"
+msgstr "Membres"
+
+#: views/dashboard.py:135
+msgid "Attendance"
+msgstr "Présence"
+
+#: views/dashboard.py:144
+msgid "Billing"
+msgstr "Facturation"
+
+#: views/dashboard.py:153 views/class_schedule_view.py:69
+msgid "Class Schedule"
+msgstr "Emploi du temps"
+
+#: views/dashboard.py:161
+msgid "Instructors"
+msgstr "Instructeurs"
+
+#: views/dashboard.py:170
+msgid "Setting"
+msgstr "Paramètre"
+
+#: views/setting_view.py:38
+msgid "Language"
+msgstr "Langue"
+
+#: views/setting_view.py:52
+msgid "Background"
+msgstr "Arrière-plan"
+
+#: views/setting_view.py:56
+msgid "Change"
+msgstr "Changer"
+
+#: views/setting_view.py:62
+msgid "Notifications"
+msgstr "Notifications"
+
+#: views/setting_view.py:69
+msgid "Enable Notifications"
+msgstr "Activer les notifications"
+
+#: views/setting_view.py:75
+msgid "Theme"
+msgstr "Thème"
+
+#: views/setting_view.py:78
+msgid "Light"
+msgstr "Clair"
+
+#: views/setting_view.py:78
+msgid "Dark"
+msgstr "Sombre"
+
+#: views/instructor_view.py:42 views/class_schedule_view.py:56
+#: files/add_update_instructor.py:16
+msgid "Add Instructor"
+msgstr "Ajouter un instructeur"
+
+#: views/instructor_view.py:48 views/class_schedule_view.py:62
+msgid "Refresh"
+msgstr "Rafraîchir"
+
+#: views/instructor_view.py:53 views/single_customer_attendance.py:59
+msgid "ID"
+msgstr "ID"
+
+#: views/instructor_view.py:54 views/billing_view.py:68
+msgid "NAME"
+msgstr "NOM"
+
+#: views/instructor_view.py:55
+msgid "EMAIL"
+msgstr "EMAIL"
+
+#: views/instructor_view.py:56
+msgid "PHONE"
+msgstr "TÉLÉPHONE"
+
+#: views/instructor_view.py:57
+msgid "JOINED AT"
+msgstr "REJOINT LE"
+
+#: views/instructor_view.py:58
+msgid "RATE"
+msgstr "TARIF"
+
+#: views/attendance_view.py:65
+msgid "Today:{today.strftime(\"%Y-%m-%d\")}"
+msgstr "Aujourd'hui : {today.strftime(\"%Y-%m-%d\")}"
+
+#: views/attendance_view.py:68 views/billing_view.py:38
+msgid "Search here..."
+msgstr "Recherchez ici..."
+
+#: views/attendance_view.py:81 views/member_view.py:198
+msgid "Id"
+msgstr "Id"
+
+#: views/attendance_view.py:82 views/member_view.py:199
+msgid "Name"
+msgstr "Nom"
+
+#: views/attendance_view.py:85
+msgid "Check in"
+msgstr "Arrivée"
+
+#: views/attendance_view.py:88
+msgid "Check out"
+msgstr "Départ"
+
+#: views/attendance_view.py:91 views/member_view.py:209
+msgid "Action"
+msgstr "Action"
+
+#: views/member_view.py:86
+msgid "Search Members..."
+msgstr "Rechercher des membres..."
+
+#: views/member_view.py:99
+msgid "From:"
+msgstr "De :"
+
+#: views/member_view.py:101 views/member_view.py:106 views/member_view.py:113
+#: views/member_view.py:116
+msgid "2020-09-01"
+msgstr "2020-09-01"
+
+#: views/member_view.py:126
+msgid "Membership is expiring on days:"
+msgstr "L'adhésion expire dans :"
+
+#: views/member_view.py:134
+msgid "Get pending payment customers:"
+msgstr "Obtenez les clients avec des paiements en attente :"
+
+#: views/member_view.py:144
+msgid "name"
+msgstr "nom"
+
+#: views/member_view.py:145
+msgid "email"
+msgstr "email"
+
+#: views/member_view.py:146
+msgid "phone"
+msgstr "téléphone"
+
+#: views/member_view.py:147
+msgid "subscription_dat"
+msgstr "date d'abonnement"
+
+#: views/member_view.py:148 views/member_view.py:207
+msgid "last_payment_date"
+msgstr "date du dernier paiement"
+
+#: views/member_view.py:149
+msgid "membership_expir"
+msgstr "expiration de l'abonnement"
+
+#: views/member_view.py:151
+msgid "asc"
+msgstr "asc"
+
+#: views/member_view.py:151
+msgid "desc"
+msgstr "desc"
+
+#: views/member_view.py:155
+msgid "Sort by"
+msgstr "Trier par"
+
+#: views/member_view.py:168
+msgid "Export as CSV"
+msgstr "Exporter en CSV"
+
+#: views/member_view.py:175
+msgid "Export as pdf"
+msgstr "Exporter en PDF"
+
+#: views/member_view.py:178
+msgid "Export as json"
+msgstr "Exporter en JSON"
+
+#: views/member_view.py:181
+msgid "Export as excel"
+msgstr "Exporter en Excel"
+
+#: views/member_view.py:186
+msgid "Add member"
+msgstr "Ajouter un membre"
+
+#: views/member_view.py:200
+msgid "Email"
+msgstr "Email"
+
+#: views/member_view.py:201
+msgid "Phone"
+msgstr "Téléphone"
+
+#: views/member_view.py:202
+msgid "Subscription"
+msgstr "Abonnement"
+
+#: views/member_view.py:203
+msgid "Subscription Date"
+msgstr "Date d'abonnement"
+
+#: views/member_view.py:204
+msgid "membership_expiry"
+msgstr "expiration de l'abonnement"
+
+#: views/member_view.py:205
+msgid "subscription_price"
+msgstr "prix de l'abonnement"
+
+#: views/member_view.py:206
+msgid "total_amount_paid"
+msgstr "montant total payé"
+
+#: views/member_view.py:208 views/class_schedule_view.py:78
+msgid "Status"
+msgstr "Statut"
+
+#: views/class_schedule_view.py:50
+msgid "Add Class"
+msgstr "Ajouter un cours"
+
+#: views/class_schedule_view.py:75
+msgid "Date"
+msgstr "Date"
+
+#: views/class_schedule_view.py:76
+msgid "Duration"
+msgstr "Durée"
+
+#: views/class_schedule_view.py:77
+msgid "Shift"
+msgstr "Poste"
+
+#: views/class_schedule_view.py:79
+msgid "Available spot"
+msgstr "Place disponible"
+
+#: views/class_schedule_view.py:80
+msgid "Instructor"
+msgstr "Instructeur"
+
+#: views/single_customer_attendance.py:45
+#, python-brace-format
+msgid "Attendance of {self.customer[1]}"
+msgstr "Présence de {self.customer[1]}"
+
+#: views/single_customer_attendance.py:50 files/add_update_class_details.py:38
+msgid "Date:"
+msgstr "Date :"
+
+#: views/single_customer_attendance.py:58
+msgid "2024-9"
+msgstr "2024-9"
+
+#: views/single_customer_attendance.py:62
+msgid "Check In"
+msgstr "Arrivée"
+
+#: views/single_customer_attendance.py:65
+msgid "Check Out"
+msgstr "Départ"
+
+#: views/billing_view.py:58
+msgid "Export to CSV"
+msgstr "Exporter en CSV"
+
+#: views/billing_view.py:67
+msgid "INVOICE ID"
+msgstr "ID DE FACTURE"
+
+#: views/billing_view.py:69
+msgid "SUBSCRIPTION TYPE"
+msgstr "TYPE D'ABONNEMENT"
+
+#: views/billing_view.py:70
+msgid "DATE"
+msgstr "DATE"
+
+#: views/billing_view.py:71
+msgid "AMOUNT TO PAY"
+msgstr "MONTANT À PAYER"
+
+#: views/billing_view.py:72
+msgid "AMOUNT PAID"
+msgstr "MONTANT PAYÉ"
+
+#: views/billing_view.py:73
+msgid "REMAINING AMOUNT"
+msgstr "MONTANT RESTANT"
+
+#: views/billing_view.py:74
+msgid "LAST PAID AMOUNT"
+msgstr "DERNIER MONTANT PAYÉ"
+
+#: views/billing_view.py:75
+msgid "LAST PAID DATE"
+msgstr "DATE DU DERNIER PAIEMENT"
+
+#: views/billing_view.py:117
+msgid "No invoices available"
+msgstr "Aucune facture disponible"
+
+#: files/add_update_class_details.py:21
+msgid "Update Class Details"
+msgstr "Mettre à jour les détails du cours"
+
+#: files/add_update_class_details.py:21
+msgid "Add Class Details"
+msgstr "Ajouter des détails de cours"
+
+#: files/add_update_class_details.py:45
+msgid "Duration:"
+msgstr "Durée :"
+
+#: files/add_update_class_details.py:50
+msgid "Shift:"
+msgstr "Poste :"
+
+#: files/add_update_class_details.py:55
+msgid "Instructor:"
+msgstr "Instructeur :"
+
+#: files/add_update_class_details.py:77
+msgid "Status:"
+msgstr "Statut :"
+
+#: files/add_update_class_details.py:82
+msgid "Available"
+msgstr "Disponible"

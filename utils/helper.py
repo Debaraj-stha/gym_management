@@ -4,9 +4,12 @@ from tkinter import Entry, Frame
 import smtplib
 import os
 import pandas as pd
+import gettext
 
+from utils.constraints import LANGUAGES
 from utils.environment_file import get_env
 from .logger import logger
+from gettext import gettext as _
 
 
 def focusIn(event):
@@ -133,3 +136,20 @@ def get_table_column_name(schema):
         return col
     except Exception as e:
         print(f"An error occurred while fetching table column names: {e}")
+
+
+def get_localization():
+    try:
+        language = get_env("LANGUAGE")
+        print(language)
+        code = LANGUAGES.get("Nepali")
+        print(code)
+        return code
+
+    except Exception as e:
+        print(f"An error occurred while fetching localization: {e}")
+        return "en"
+
+
+def collect_language_input():
+    return _

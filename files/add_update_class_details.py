@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter.ttk import Combobox, Frame
 
+
 from files.calender import MyCalendar
 from utils.constraints import DURATIONS, SHIFTS, STATUS, TABLENAME
 from utils.widgets import createButton, createLabel
@@ -15,7 +16,9 @@ class AddOrUpdateDetailClass(tk.Toplevel):
 
         super().__init__()
         self._is_update = record_id is not None
-        self.title("Update Class Details" if self._is_update else "Add Class Details")
+        self.title(
+            _("Update Class Details") if self._is_update else _("Add Class Details")
+        )
         self.geometry("500x600")
         self.config(padx=10, pady=10)
         self.resizable(False, False)
@@ -31,24 +34,24 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         self.create_widgets()
 
     def create_widgets(self):
-        createLabel(self, "Date:").grid(row=1, column=1, sticky="w")
+        createLabel(self, _("Date:")).grid(row=1, column=1, sticky="w")
         self.date_box = Combobox(self, values=[1, 2, 3])
         self.date_box.grid(row=1, column=2, sticky="nsew")
         self.date_box.bind("<Button-1>", self._pick_date)
 
         self.date_box.set(self._old_value[0] if self._is_update else today)
 
-        createLabel(self, "Duration:").grid(row=2, column=1, sticky="w", pady=10)
+        createLabel(self, _("Duration:")).grid(row=2, column=1, sticky="w", pady=10)
         self.duration_box = Combobox(self, values=DURATIONS)
         self.duration_box.grid(row=2, column=2, sticky="nsew", pady=10)
         self.duration_box.set(self._old_value[1] if self._is_update else DURATIONS[0])
 
-        createLabel(self, "Shift:").grid(row=3, column=1, sticky="w", pady=10)
+        createLabel(self, _("Shift:")).grid(row=3, column=1, sticky="w", pady=10)
         self.shift_box = Combobox(self, values=SHIFTS)
         self.shift_box.grid(row=3, column=2, sticky="nsew", pady=10)
         self.shift_box.set(self._old_value[2] if self._is_update else SHIFTS[0])
 
-        createLabel(self, "Instructor:").grid(row=4, column=1, sticky="w", pady=10)
+        createLabel(self, _("Instructor:")).grid(row=4, column=1, sticky="w", pady=10)
 
         # Create a Frame to hold the Listbox and Scrollbar
         listbox_frame = Frame(self)
@@ -70,17 +73,19 @@ class AddOrUpdateDetailClass(tk.Toplevel):
         self.instructor.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        createLabel(self, "Status:").grid(row=5, column=1, sticky="w", pady=10)
+        createLabel(self, _("Status:")).grid(row=5, column=1, sticky="w", pady=10)
         self.status = Combobox(self, values=STATUS)
         self.status.grid(row=5, column=2, sticky="nsew", pady=10)
         self.status.set(self._old_value[4] if self._is_update else STATUS[0])
 
-        createLabel(self, "Available spot:").grid(row=6, column=1, sticky="w", pady=10)
+        createLabel(self, _("Available spot:")).grid(
+            row=6, column=1, sticky="w", pady=10
+        )
         self.entry = tk.Entry(self)
         self.entry.grid(row=6, column=2, sticky="nsew", pady=10)
         self.entry.insert(0, self._old_value[5])
 
-        createButton(self, "Save", command=self._process).grid(
+        createButton(self, _("Save"), command=self._process).grid(
             row=7, column=1, columnspan=3, sticky="ew", pady=10
         )
 

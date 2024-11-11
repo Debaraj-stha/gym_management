@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import OptionMenu, ttk
+
+
 from utils.widgets import createButton, createLabel
 from .setting_view import SettingView
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -43,7 +45,7 @@ class Dashboard(tk.Frame):
         scrollbar.pack(side="right", fill="y")
 
         # Label
-        createLabel(scrollable_frame, text="Active member on", fontsize=16).grid(
+        createLabel(scrollable_frame, text=_("Active member on"), fontsize=16).grid(
             row=0, column=0, columnspan=2
         )
 
@@ -87,7 +89,7 @@ class Dashboard(tk.Frame):
         canvas_graph = FigureCanvasTkAgg(fig, master=scrollable_frame)
         canvas_graph.get_tk_widget().grid(row=2, column=0, columnspan=2, pady=10)
         # Label
-        createLabel(scrollable_frame, text="Member left on", fontsize=16).grid(
+        createLabel(scrollable_frame, text=_("Member left on"), fontsize=16).grid(
             row=3, column=0, columnspan=2
         )
 
@@ -120,7 +122,7 @@ class Dashboard(tk.Frame):
         # Add buttons to the right frame
         button1 = createButton(
             right_frame,
-            text="Members",
+            text=_("Members"),
             command=lambda: self.controller.show_frame("MembersView"),
             width=20,
             height=3,
@@ -129,7 +131,7 @@ class Dashboard(tk.Frame):
 
         button2 = createButton(
             right_frame,
-            text="Attendance",
+            text=_("Attendance"),
             command=lambda: self.controller.show_frame("AttendanceView"),
             width=20,
             height=3,
@@ -138,7 +140,7 @@ class Dashboard(tk.Frame):
 
         button3 = createButton(
             right_frame,
-            text="Billing",
+            text=_("Billing"),
             command=lambda: self.controller.show_frame("BillingView"),
             width=20,
             height=3,
@@ -147,7 +149,7 @@ class Dashboard(tk.Frame):
 
         button4 = createButton(
             right_frame,
-            text="Class Schedule",
+            text=_("Class Schedule"),
             command=lambda: self.controller.show_frame("ClassScheduleView"),
             width=20,
             height=3,
@@ -155,7 +157,7 @@ class Dashboard(tk.Frame):
         button4.pack(pady=10)
         button5 = createButton(
             right_frame,
-            text="Instructors",
+            text=_("Instructors"),
             command=lambda: self.controller.show_frame("InstructorView"),
             width=20,
             height=3,
@@ -164,7 +166,7 @@ class Dashboard(tk.Frame):
 
         button6 = createButton(
             right_frame,
-            text="Setting",
+            text=_("Setting"),
             command=lambda: SettingView(parent=self.controller),
             width=20,
             height=3,

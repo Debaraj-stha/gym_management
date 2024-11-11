@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 from utils.widgets import create_buttons, create_page_numbers, createLabel
 
 
@@ -40,12 +41,12 @@ class SingleCustomer(tk.Tk):
         self.tool_frame.grid_rowconfigure(3, weight=1)
         self._config_columns(self.tool_frame)
 
-        createLabel(self.tool_frame, f"Attendance of {self.customer[1]}").grid(
+        createLabel(self.tool_frame, _(f"Attendance of {self.customer[1]}")).grid(
             row=1,
             column=0,
             sticky="w",  # Change column=1 to column=0, sticky="w" for left alignment
         )
-        createLabel(self.tool_frame, "Date:").grid(
+        createLabel(self.tool_frame, _("Date:")).grid(
             row=2, column=0, sticky="w"
         )  # Left align Date label
 
@@ -53,12 +54,14 @@ class SingleCustomer(tk.Tk):
         self.date_entry_field.grid(
             row=2, column=1, sticky="ew"
         )  # Entry field can remain stretched
-        self.date_entry_field.insert(0, "2024-9")
-        createLabel(self.tool_frame, "ID").grid(row=3, column=0, sticky="ew", pady=10)
-        createLabel(self.tool_frame, "Check In").grid(
+        self.date_entry_field.insert(0, _("2024-9"))
+        createLabel(self.tool_frame, _("ID")).grid(
+            row=3, column=0, sticky="ew", pady=10
+        )
+        createLabel(self.tool_frame, _("Check In")).grid(
             row=3, column=1, sticky="ew", pady=10
         )
-        createLabel(self.tool_frame, "Check Out").grid(
+        createLabel(self.tool_frame, _("Check Out")).grid(
             row=3, column=2, sticky="ew", pady=10
         )
         self._display_attendance()

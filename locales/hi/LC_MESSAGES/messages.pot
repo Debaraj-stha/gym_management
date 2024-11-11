@@ -1,0 +1,441 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-11-11 18:41+0545\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+#: views/dashboard.py:49
+msgid "Active member on"
+msgstr "सक्रिय सदस्य की तारीख"
+
+#: views/dashboard.py:93
+msgid "Member left on"
+msgstr "सदस्य छोड़ने की तारीख"
+
+#: views/dashboard.py:126
+msgid "Members"
+msgstr "सदस्य"
+
+#: views/dashboard.py:135
+msgid "Attendance"
+msgstr "उपस्थिति"
+
+#: views/dashboard.py:144
+msgid "Billing"
+msgstr "बिलिंग"
+
+#: views/dashboard.py:153 views/class_schedule_view.py:69
+msgid "Class Schedule"
+msgstr "कक्षा अनुसूची"
+
+#: views/dashboard.py:161
+msgid "Instructors"
+msgstr "प्रशिक्षक"
+
+#: views/dashboard.py:170
+msgid "Setting"
+msgstr "सेटिंग"
+
+#: views/setting_view.py:38
+msgid "Language"
+msgstr "भाषा"
+
+#: views/setting_view.py:52
+msgid "Background"
+msgstr "पृष्ठभूमि"
+
+#: views/setting_view.py:56
+msgid "Change"
+msgstr "बदलें"
+
+#: views/setting_view.py:62
+msgid "Notifications"
+msgstr "सूचनाएं"
+
+#: views/setting_view.py:69
+msgid "Enable Notifications"
+msgstr "सूचनाएं सक्षम करें"
+
+#: views/setting_view.py:75
+msgid "Theme"
+msgstr "थीम"
+
+#: views/setting_view.py:78
+msgid "Light"
+msgstr "हल्का"
+
+#: views/setting_view.py:78
+msgid "Dark"
+msgstr "गहरा"
+
+#: views/instructor_view.py:42 views/class_schedule_view.py:56
+#: files/add_update_instructor.py:16
+msgid "Add Instructor"
+msgstr "प्रशिक्षक जोड़ें"
+
+#: views/instructor_view.py:48 views/class_schedule_view.py:62
+msgid "Refresh"
+msgstr "ताज़ा करें"
+
+#: views/instructor_view.py:53 views/single_customer_attendance.py:59
+msgid "ID"
+msgstr "आईडी"
+
+#: views/instructor_view.py:54 views/billing_view.py:68
+msgid "NAME"
+msgstr "नाम"
+
+#: views/instructor_view.py:55
+msgid "EMAIL"
+msgstr "ईमेल"
+
+#: views/instructor_view.py:56
+msgid "PHONE"
+msgstr "फोन"
+
+#: views/instructor_view.py:57
+msgid "JOINED AT"
+msgstr "शामिल तिथि"
+
+#: views/instructor_view.py:58
+msgid "RATE"
+msgstr "दर"
+
+#: views/attendance_view.py:65
+msgid "Today:{today.strftime(\"%Y-%m-%d\")}"
+msgstr "आज: {today.strftime(\"%Y-%m-%d\")}"
+
+#: views/attendance_view.py:68 views/billing_view.py:38
+msgid "Search here..."
+msgstr "यहां खोजें..."
+
+#: views/attendance_view.py:81 views/member_view.py:198
+msgid "Id"
+msgstr "आईडी"
+
+#: views/attendance_view.py:82 views/member_view.py:199
+msgid "Name"
+msgstr "नाम"
+
+#: views/attendance_view.py:85
+msgid "Check in"
+msgstr "चेक इन"
+
+#: views/attendance_view.py:88
+msgid "Check out"
+msgstr "चेक आउट"
+
+#: views/attendance_view.py:91 views/member_view.py:209
+msgid "Action"
+msgstr "कार्यवाही"
+
+#: views/member_view.py:86
+msgid "Search Members..."
+msgstr "सदस्यों को खोजें..."
+
+#: views/member_view.py:99
+msgid "From:"
+msgstr "से:"
+
+#: views/member_view.py:101 views/member_view.py:106 views/member_view.py:113
+#: views/member_view.py:116
+msgid "2020-09-01"
+msgstr "२०२०-०९-०१"
+
+#: views/member_view.py:126
+msgid "Membership is expiring on days:"
+msgstr "सदस्यता समाप्त हो रही है दिन में:"
+
+#: views/member_view.py:134
+msgid "Get pending payment customers:"
+msgstr "लंबित भुगतान वाले ग्राहक प्राप्त करें:"
+
+#: views/member_view.py:144
+msgid "name"
+msgstr "नाम"
+
+#: views/member_view.py:145
+msgid "email"
+msgstr "ईमेल"
+
+#: views/member_view.py:146
+msgid "phone"
+msgstr "फोन"
+
+#: views/member_view.py:147
+msgid "subscription_dat"
+msgstr "सदस्यता तिथि"
+
+#: views/member_view.py:148 views/member_view.py:207
+msgid "last_payment_date"
+msgstr "अंतिम भुगतान तिथि"
+
+#: views/member_view.py:149
+msgid "membership_expir"
+msgstr "सदस्यता समाप्त"
+
+#: views/member_view.py:151
+msgid "asc"
+msgstr "आरोही"
+
+#: views/member_view.py:151
+msgid "desc"
+msgstr "अवरोही"
+
+#: views/member_view.py:155
+msgid "Sort by"
+msgstr "क्रमबद्ध करें"
+
+#: views/member_view.py:168
+msgid "Export as CSV"
+msgstr "CSV के रूप में निर्यात करें"
+
+#: views/member_view.py:175
+msgid "Export as pdf"
+msgstr "PDF के रूप में निर्यात करें"
+
+#: views/member_view.py:178
+msgid "Export as json"
+msgstr "JSON के रूप में निर्यात करें"
+
+#: views/member_view.py:181
+msgid "Export as excel"
+msgstr "Excel के रूप में निर्यात करें"
+
+#: views/member_view.py:186
+msgid "Add member"
+msgstr "सदस्य जोड़ें"
+
+#: views/member_view.py:200
+msgid "Email"
+msgstr "ईमेल"
+
+#: views/member_view.py:201
+msgid "Phone"
+msgstr "फोन"
+
+#: views/member_view.py:202
+msgid "Subscription"
+msgstr "सदस्यता"
+
+#: views/member_view.py:203
+msgid "Subscription Date"
+msgstr "सदस्यता तिथि"
+
+#: views/member_view.py:204
+msgid "membership_expiry"
+msgstr "सदस्यता समाप्ति"
+
+#: views/member_view.py:205
+msgid "subscription_price"
+msgstr "सदस्यता शुल्क"
+
+#: views/member_view.py:206
+msgid "total_amount_paid"
+msgstr "कुल भुगतान राशि"
+
+#: views/member_view.py:208 views/class_schedule_view.py:78
+msgid "Status"
+msgstr "स्थिति"
+
+#: views/class_schedule_view.py:50
+msgid "Add Class"
+msgstr "कक्षा जोड़ें"
+
+#: views/class_schedule_view.py:75
+msgid "Date"
+msgstr "तारीख"
+
+#: views/class_schedule_view.py:76
+msgid "Duration"
+msgstr "अवधि"
+
+#: views/class_schedule_view.py:77
+msgid "Shift"
+msgstr "पारी"
+
+#: views/class_schedule_view.py:79
+msgid "Available spot"
+msgstr "उपलब्ध स्थान"
+
+#: views/class_schedule_view.py:80
+msgid "Instructor"
+msgstr "प्रशिक्षक"
+
+#: views/single_customer_attendance.py:45
+#, python-brace-format
+msgid "Attendance of {self.customer[1]}"
+msgstr "{self.customer[1]} की उपस्थिति"
+
+#: views/single_customer_attendance.py:50 files/add_update_class_details.py:38
+msgid "Date:"
+msgstr "तारीख:"
+
+#: views/single_customer_attendance.py:58
+msgid "2024-9"
+msgstr "2024-9"
+
+#: views/single_customer_attendance.py:62
+msgid "Check In"
+msgstr "चेक इन"
+
+#: views/single_customer_attendance.py:65
+msgid "Check Out"
+msgstr "चेक आउट"
+
+#: views/billing_view.py:58
+msgid "Export to CSV"
+msgstr "CSV में निर्यात करें"
+
+#: views/billing_view.py:67
+msgid "INVOICE ID"
+msgstr "चालान आईडी"
+
+#: views/billing_view.py:69
+msgid "SUBSCRIPTION TYPE"
+msgstr "सदस्यता प्रकार"
+
+#: views/billing_view.py:70
+msgid "DATE"
+msgstr "तारीख"
+
+#: views/billing_view.py:71
+msgid "AMOUNT TO PAY"
+msgstr "भुगतान राशि"
+
+#: views/billing_view.py:72
+msgid "AMOUNT PAID"
+msgstr "भुगतान की गई राशि"
+
+#: views/billing_view.py:73
+msgid "REMAINING AMOUNT"
+msgstr "शेष राशि"
+
+#: views/billing_view.py:74
+msgid "LAST PAID AMOUNT"
+msgstr "अंतिम भुगतान राशि"
+
+#: views/billing_view.py:75
+msgid "LAST PAID DATE"
+msgstr "अंतिम भुगतान तिथि"
+
+#: views/billing_view.py:117
+msgid "No invoices available"
+msgstr "कोई चालान उपलब्ध नहीं"
+
+#: files/add_update_class_details.py:21
+msgid "Update Class Details"
+msgstr "कक्षा विवरण अपडेट करें"
+
+#: files/add_update_class_details.py:21
+msgid "Add Class Details"
+msgstr "कक्षा विवरण जोड़ें"
+
+#: files/add_update_class_details.py:45
+msgid "Duration:"
+msgstr "अवधि:"
+
+#: files/add_update_class_details.py:50
+msgid "Shift:"
+msgstr "पारी:"
+
+#: files/add_update_class_details.py:55
+msgid "Instructor:"
+msgstr "प्रशिक्षक:"
+
+#: files/add_update_class_details.py:77
+msgid "Status:"
+msgstr "स्थिति:"
+
+#: files/add_update_class_details.py:82
+msgid "Available spot:"
+msgstr "उपलब्ध स्थान:"
+
+#: files/add_update_class_details.py:89 files/add_update_instructor.py:71
+#: files/add_update_invoice.py:61
+msgid "Save"
+msgstr "सहेजें"
+
+#: files/add_member.py:24 files/add_member.py:152
+msgid "Add Member"
+msgstr "सदस्य जोड़ें"
+
+#: files/add_member.py:42 files/add_update_instructor.py:50
+msgid "Name:"
+msgstr "नाम:"
+
+#: files/add_member.py:59 files/add_update_instructor.py:55
+msgid "Email:"
+msgstr "ईमेल:"
+
+#: files/add_member.py:76 files/add_update_instructor.py:60
+msgid "Phone:"
+msgstr "फोन:"
+
+#: files/add_member.py:93
+msgid "Subscription:"
+msgstr "सदस्यता:"
+
+#: files/add_member.py:104 files/update_member.py:49
+msgid "Select Subscription"
+msgstr "सदस्यता चुनें"
+
+#: files/add_member.py:112
+msgid "Subscription charge:"
+msgstr "सदस्यता शुल्क:"
+
+#: files/add_member.py:127
+msgid "Amount Paid:"
+msgstr "भुगतान की गई राशि:"
+
+#: files/add_update_instructor.py:14
+msgid "Add/Update Instructor"
+msgstr "प्रशिक्षक जोड़ें/अपडेट करें"
+
+#: files/add_update_instructor.py:65
+msgid "Rate:"
+msgstr "दर:"
+
+#: files/update_member.py:31
+msgid "Update Member"
+msgstr "सदस्य अपडेट करें"
+
+#: files/update_member.py:40
+msgid "Subscription type"
+msgstr "सदस्यता प्रकार"
+
+#: files/update_member.py:56
+msgid "Total Amount paid:"
+msgstr "कुल भुगतान राशि:"
+
+#: files/update_member.py:66
+msgid "Update"
+msgstr "अपडेट करें"
+
+#: files/add_update_invoice.py:19
+msgid "Update Invoice"
+msgstr "चालान अपडेट करें"
+
+#: files/add_update_invoice.py:34
+msgid "Amount"
+msgstr "राशि"
+
+#: files/add_update_invoice.py:44
+msgid "Amount to Pay"
+msgstr "भुगतान राशि"
+
+#: files/add_update_invoice.py:52
+msgid "Remaining Amount"
+msgstr "शेष राशि"

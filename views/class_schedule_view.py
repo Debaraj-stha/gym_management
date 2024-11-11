@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter.ttk import Frame
 
+
 from files.add_update_class_details import AddOrUpdateDetailClass
 from files.add_update_instructor import AddUpdateInstructor
 from utils.constraints import TABLENAME
@@ -45,35 +46,37 @@ class ClassScheduleView(tk.Frame):
         button_row.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=10)
         createButton(
             button_row,
-            "Add Class",
+            _("Add Class"),
             state="active",
             command=lambda: AddOrUpdateDetailClass(self.db),
         ).grid(row=1, column=0, sticky="w")
         createButton(
             button_row,
-            "Add Instructor",
+            _("Add Instructor"),
             state="active",
             command=lambda: AddUpdateInstructor(self.db),
         ).grid(row=1, column=1, sticky="w")
         createButton(
             button_row,
-            "Refresh",
+            _("Refresh"),
             command=lambda: self._refresh,
         ).grid(row=1, column=2, sticky="w")
 
         self._config_grid(content_frame, columns=2)
 
         # Class Schedule label aligned to the left
-        createLabel(content_frame, "Class Schedule").grid(row=0, column=0, sticky="w")
+        createLabel(content_frame, _("Class Schedule")).grid(
+            row=0, column=0, sticky="w"
+        )
 
         # Treeview for the schedule
         columns = [
-            "Date",
-            "Duration",
-            "Shift",
-            "Status",
-            "Available spot",
-            "Instructor",
+            _("Date"),
+            _("Duration"),
+            _("Shift"),
+            _("Status"),
+            _("Available spot"),
+            _("Instructor"),
         ]
         self.schedule_tree = tk.ttk.Treeview(
             content_frame, columns=columns, show="headings"

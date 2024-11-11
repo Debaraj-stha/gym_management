@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Label, ttk
 from dotenv import load_dotenv
 import os
 
@@ -12,8 +12,10 @@ from files.database_schemas import (
     INSTRUCTOR_SCHEMA,
     INVOICE_SCHEMA,
 )
+from files.localization import setup_translation
 from utils.constraints import TABLENAME
 from utils.environment_file import get_env, set_env
+from utils.helper import get_localization
 from views.dashboard import Dashboard
 from views.instructor_view import InstructorView
 from views.member_view import MembersView
@@ -23,6 +25,9 @@ from views.class_schedule_view import ClassScheduleView
 
 from utils.logger import logger
 from utils.database import Database
+
+locale = get_localization()
+_ = setup_translation(locale)
 
 
 class GymManagementApp(tk.Tk):
@@ -72,6 +77,7 @@ class GymManagementApp(tk.Tk):
             )  # setting default backgroud color to environment variable if not set background color
 
         # Create a container for the main content
+        Label(self, text=_("Billing")).pack()
         container = ttk.Frame(self)
         container.pack(side="top", fill="both", expand=True, padx=10, pady=10)
 

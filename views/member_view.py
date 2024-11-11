@@ -1,20 +1,19 @@
-from email import header
 import tkinter as tk
 from tkinter import Frame, IntVar, ttk
 from tkinter.ttk import Style, Treeview, Combobox
 import os
 from tkinter import messagebox
 import pandas as pd
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 from io import BytesIO
 
-from files.database_schemas import CUSTOMER_SCHEMA, INVOICE_SCHEMA
+
+from files.database_schemas import CUSTOMER_SCHEMA
+
 from files.update_member import UpdateMember
-from utils.constraints import TABLENAME
 from utils.widgets import (
     backButton,
     create_buttons,
@@ -23,7 +22,7 @@ from utils.widgets import (
     createLabel,
 )
 from files.add_member import AddMember
-from utils.helper import export_to_csv, focusIn, focusOut, get_table_column_name
+from utils.helper import export_to_csv, focusIn, focusOut
 
 days = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
@@ -75,37 +74,37 @@ class MembersView(tk.Frame):
             bg="#ffffff",
             fg="#000000",
         )
-
+        self.placeholder = _("Search Members...")
         self.search_entry.grid(row=1, column=1, sticky="ew", padx=(10, 0))
-        self.search_entry.insert(0, "Search Members...")
+        self.search_entry.insert(0, self.placeholder)
 
         # registering events
         self.search_entry.bind("<FocusIn>", lambda event: focusIn(event))
 
         self.search_entry.bind(
-            "<FocusOut>", lambda event: focusOut(event, "Search Members...")
+            "<FocusOut>", lambda event: focusOut(event, self.placeholder)
         )
 
         self.search_entry.bind("<KeyRelease>", self.search)
 
-        createLabel(toolrow, "From:").grid(row=1, column=3, sticky="ew")
+        createLabel(toolrow, _("From:")).grid(row=1, column=3, sticky="ew")
         self.from_date_entry = tk.Entry(toolrow)
-        self.from_date_entry.insert(0, "2020-09-01")
+        self.from_date_entry.insert(0, _("2020-09-01"))
         self.from_date_entry.grid(row=1, column=4, sticky="ew", padx=(10, 0))
 
         createLabel(toolrow, "To:").grid(row=1, column=5, sticky="ew")
         self.to_date_entry = tk.Entry(toolrow)
-        self.to_date_entry.insert(0, "2020-09-01")
+        self.to_date_entry.insert(0, _("2020-09-01"))
         self.to_date_entry.grid(row=1, column=6, sticky="ew", padx=(10, 0))
 
         # adding  events to date entry
         self.to_date_entry.bind("<FocusIn>", lambda event: focusIn(event))
         self.from_date_entry.bind("<FocusIn>", lambda event: focusIn(event))
         self.to_date_entry.bind(
-            "<FocusOut>", lambda event: focusOut(event, "2020-09-01")
+            "<FocusOut>", lambda event: focusOut(event, _("2020-09-01"))
         )
         self.from_date_entry.bind(
-            "<FocusOut>", lambda event: focusOut(event, "2020-09-01")
+            "<FocusOut>", lambda event: focusOut(event, _("2020-09-01"))
         )
 
         self.to_date_entry.bind(
@@ -115,7 +114,7 @@ class MembersView(tk.Frame):
             "<KeyRelease>", lambda event: self._get_customer_between(event)
         )
 
-        createLabel(toolrow, "Membership is expiring on days:").grid(
+        createLabel(toolrow, _("Membership is expiring on days:")).grid(
             row=1,
             column=7,
             sticky="ew",
@@ -123,7 +122,7 @@ class MembersView(tk.Frame):
         self.days_before_expiry_entry = Combobox(toolrow, values=days)
         self.days_before_expiry_entry.current(0)
         self.days_before_expiry_entry.grid(row=1, column=8, sticky="ew")
-        createLabel(toolrow, "Get pending payment customers:").grid(
+        createLabel(toolrow, _("Get pending payment customers:")).grid(
             row=2, column=1, sticky="w"
         )
         self.get_pending_customer_var = IntVar()
@@ -133,18 +132,18 @@ class MembersView(tk.Frame):
             variable=self.get_pending_customer_var,
         ).grid(row=2, column=2, sticky="w")
         sort_by_columns = [
-            "name",
-            "email",
-            "phone",
-            "subscription_date",
-            "last_payment_date",
-            "membership_expiry",
+            _("name"),
+            _("email"),
+            _("phone"),
+            _("subscription_dat"),
+            _("last_payment_date"),
+            _("membership_expir"),
         ]
-        sort_order = ["asc", "desc"]
+        sort_order = [_("asc"), _("desc")]
         self.sort_by_columns_combobox = Combobox(toolrow, values=sort_by_columns)
         self.sort_by_columns_combobox.grid(row=2, column=3, sticky="nsew")
         self.sort_by_columns_combobox.set(
-            "Sort by",
+            _("Sort by"),
         )
         self.sort_order_combobox = Combobox(toolrow, values=sort_order)
         self.sort_order_combobox.current(0)
@@ -157,25 +156,25 @@ class MembersView(tk.Frame):
         button_row.grid(row=3, column=1, columnspan=5, sticky="ew", pady=(10, 0))
         createButton(
             button_row,
-            "Export as CSV",
+            _("Export as CSV"),
             command=lambda: export_to_csv(
                 self.db.get_all(), "customers.csv", CUSTOMER_SCHEMA
             ),
         ).grid(row=3, column=1, sticky="nsew", padx=10)
 
         createButton(
-            button_row, "Export as pdf", command=lambda: self._export_to_pdf()
+            button_row, _("Export as pdf"), command=lambda: self._export_to_pdf()
         ).grid(row=3, column=2, sticky="nsew", padx=(10))
         createButton(
-            button_row, "Export as json", command=lambda: self._export_to_json()
+            button_row, _("Export as json"), command=lambda: self._export_to_json()
         ).grid(row=3, column=3, sticky="nsew", padx=(10))
         createButton(
-            button_row, "Export as excel", command=lambda: self._export_to_excel()
+            button_row, _("Export as excel"), command=lambda: self._export_to_excel()
         ).grid(row=3, column=4, sticky="nsew", padx=(10))
 
         # adding members
         createButton(
-            self, "Add member", command=lambda: AddMember(self.db), state="active"
+            self, _("Add member"), command=lambda: AddMember(self.db), state="active"
         ).grid(row=2, column=1, sticky="w")
 
         tree_scroll = tk.Scrollbar(
@@ -187,18 +186,18 @@ class MembersView(tk.Frame):
         tree_scroll.grid(row=3, column=8, sticky="ns")
 
         columns = [
-            "Id",
-            "Name",
-            "Email",
-            "Phone",
-            "Subscription",
-            "Subscription Date",
-            "membership_expiry",
-            "subscription_price",
-            "total_amount_paid",
-            "last_payment_date",
-            "Status",
-            "Action",
+            _("Id"),
+            _("Name"),
+            _("Email"),
+            _("Phone"),
+            _("Subscription"),
+            _("Subscription Date"),
+            _("membership_expiry"),
+            _("subscription_price"),
+            _("total_amount_paid"),
+            _("last_payment_date"),
+            _("Status"),
+            _("Action"),
         ]
 
         # Add members table here
@@ -350,9 +349,9 @@ class MembersView(tk.Frame):
         # Force UI redraw if necessary
         self.treeview.update_idletasks()
 
-    def insert_placeholder(self):
-        if self.search_entry.get() == "":
-            self.search_entry.insert(0, "Search Members...")
+    # def insert_placeholder(self):
+    #     if self.search_entry.get() == "":
+    #         self.search_entry.insert(0, self.placeholder)
 
     def search(self, event):
         query = self.search_entry.get()
@@ -579,3 +578,6 @@ class MembersView(tk.Frame):
             print(f"Excel exported successfully to {file_path}")
         except Exception as e:
             print(f"An error occurred while exporting to Excel: {e}")
+
+    def _update_ui(self):
+        pass

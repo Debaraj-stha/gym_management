@@ -3,6 +3,7 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import messagebox
 
+
 from utils.constraints import TABLENAME
 from utils.helper import config_grid_col, config_grid_row
 from utils.widgets import createButton
@@ -14,7 +15,7 @@ class AddUpdateInvoice(tk.Toplevel):
         super().__init__()
         print(invoice)
         self._invoice_id = invoice_id
-        self.title("Update Invoice")
+        self.title(_("Update Invoice"))
         self.geometry("400x300")
         self.config(padx=10, pady=10)
         self.resizable(False, False)
@@ -29,7 +30,7 @@ class AddUpdateInvoice(tk.Toplevel):
         self._create_ui()
 
     def _create_ui(self):
-        label_amount = tk.Label(self, text="Amount")
+        label_amount = tk.Label(self, text=_("Amount"))
         label_amount.grid(row=1, column=1, sticky="w")
         entry_amount = tk.Entry(
             self,
@@ -39,7 +40,7 @@ class AddUpdateInvoice(tk.Toplevel):
         entry_amount.bind("<KeyRelease>", self._validate_amount)
         entry_amount.grid(row=1, column=2)
 
-        label_to_pay = tk.Label(self, text="Amount to Pay")
+        label_to_pay = tk.Label(self, text=_("Amount to Pay"))
         label_to_pay.grid(row=2, column=1, sticky="w")
         amount_to_pay_entry = tk.Entry(
             self, textvariable=self._amount_to_pay, state="readonly"
@@ -47,7 +48,7 @@ class AddUpdateInvoice(tk.Toplevel):
 
         amount_to_pay_entry.grid(row=2, column=2)
 
-        label_remaining_amount = tk.Label(self, text="Remaining Amount")
+        label_remaining_amount = tk.Label(self, text=_("Remaining Amount"))
         label_remaining_amount.grid(row=3, column=1, sticky="w")
         remaining_amount_entry = tk.Entry(
             self, textvariable=self._remaining_amount, state="readonly"
@@ -56,7 +57,7 @@ class AddUpdateInvoice(tk.Toplevel):
 
         createButton(
             self,
-            "Save",
+            _("Save"),
             command=self._save,
             state="active",
         ).grid(row=5, column=1, columnspan=2)

@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from files.add_delete_invoice import AddUpdateInvoice
+
+from files.add_update_invoice import AddUpdateInvoice
 from files.database_schemas import INVOICE_SCHEMA
 from utils.constraints import TABLENAME
 from utils.helper import config_grid_col, export_to_csv, focusIn, focusOut
@@ -32,7 +33,7 @@ class BillingView(tk.Frame):
             row=1, column=0, sticky="ew", pady=10
         )
 
-        placehoder = "Search here..."
+        placehoder = _("Search here...")
 
         self._serach_value.set(placehoder)
         serach_entry = tk.Entry(tool_row, textvariable=self._serach_value)
@@ -52,7 +53,7 @@ class BillingView(tk.Frame):
         # ).grid(row=2, column=3, sticky="ew")
         createButton(
             tool_row,
-            "Export to CSV",
+            _("Export to CSV"),
             command=lambda: export_to_csv(
                 self._db.get_all(table_name=TABLENAME.INVOICE.value),
                 "invoices.csv",
@@ -61,15 +62,15 @@ class BillingView(tk.Frame):
         ).grid(row=2, column=4, sticky="ew")
 
         columns = [
-            "INVOICE ID",
-            "NAME",
-            "SUBSCRIPTION TYPE",
-            "DATE",
-            "AMOUNT TO PAY",
-            "AMOUNT PAID",
-            "REMAINING AMOUNT",
-            "LAST PAID AMOUNT",
-            "LAST PAID DATE",
+            _("INVOICE ID"),
+            _("NAME"),
+            _("SUBSCRIPTION TYPE"),
+            _("DATE"),
+            _("AMOUNT TO PAY"),
+            _("AMOUNT PAID"),
+            _("REMAINING AMOUNT"),
+            _("LAST PAID AMOUNT"),
+            _("LAST PAID DATE"),
         ]
         self._tree = tk.ttk.Treeview(self, columns=columns, show="headings")
         for column in columns:
@@ -103,7 +104,6 @@ class BillingView(tk.Frame):
         )
 
     def _fill_tree(self):
-        print(self._invoices)
         if self._invoices:
             # deleting tree row and then updating the records
             self._tree.delete(*self._tree.get_children())
@@ -111,7 +111,7 @@ class BillingView(tk.Frame):
             for invoice in self._invoices:
                 self._tree.insert("", "end", values=invoice)
         else:
-            self._tree.insert("", "end", values="No invoices available")
+            self._tree.insert("", "end", values=_("No invoices available"))
 
     def _refresh(self):
         # refresh the records
@@ -193,9 +193,8 @@ class BillingView(tk.Frame):
             instructor_id = values[0]
             # deleting the selected instructor
             res = self._db.delete(
-                (instructor_id,)(
-                    "id",
-                ),
+                (instructor_id,),
+                ("id",),
                 table_name=TABLENAME.INSTRUCTORS.value,
             )
             if res:

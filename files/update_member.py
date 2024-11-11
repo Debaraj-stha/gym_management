@@ -2,6 +2,8 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from gettext import gettext as _
+
 from utils.widgets import createButton, createLabel
 from resources.data import subscription_value
 
@@ -26,7 +28,7 @@ class UpdateMember(tk.Tk):
         self.grid_columnconfigure(2, weight=1)
 
         # Title and window settings
-        self.title("Update Member")
+        self.title(_("Update Member"))
         self.geometry("300x200")
         self.resizable(False, False)
 
@@ -35,7 +37,7 @@ class UpdateMember(tk.Tk):
 
     def create_ui(self):
         if self.field_index == 5:
-            createLabel(self, "Subscription type").grid(
+            createLabel(self, _("Subscription type")).grid(
                 row=1, column=0, padx=20, pady=10, sticky="w"
             )
             self.subscription_combobox = ttk.Combobox(self, values=subscription_value)
@@ -44,14 +46,14 @@ class UpdateMember(tk.Tk):
             if self.old_value:
                 self.subscription_combobox.set(self.old_value)
             else:
-                self.subscription_combobox.set("Select Subscription")
+                self.subscription_combobox.set(_("Select Subscription"))
 
             self.subscription_combobox.grid(
                 row=2, column=0, padx=20, pady=10, sticky="w"
             )
 
         elif self.field_index == 9:
-            createLabel(self, "Total Amount paid:").grid(
+            createLabel(self, _("Total Amount paid:")).grid(
                 row=1, column=0, padx=20, pady=10, sticky="w"
             )
 
@@ -60,9 +62,9 @@ class UpdateMember(tk.Tk):
                 self.total_amount_paid.insert(0, str(self.old_value))
             self.total_amount_paid.grid(row=2, column=0, padx=20, pady=10, sticky="w")
 
-        createButton(self, "Update", state="active", command=self._update_record).grid(
-            row=3, column=0, padx=20, pady=10, sticky="w"
-        )
+        createButton(
+            self, _("Update"), state="active", command=self._update_record
+        ).grid(row=3, column=0, padx=20, pady=10, sticky="w")
 
     def _update_record(self):
         # Retrieve values based on the initialized widgets

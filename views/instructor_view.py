@@ -21,7 +21,6 @@ class InstructorView(tk.Frame):
         self.total_records = self.db.total_records(
             table_name=TABLENAME.INSTRUCTORS.value
         )
-        print(self.total_records)
         self._get_instructors()
         config_grid_col(self, 8)
         self.create_ui()
@@ -38,17 +37,24 @@ class InstructorView(tk.Frame):
         toolrow.grid(row=2, column=1, sticky="ew", pady=(10, 10))
         createButton(
             toolrow,
-            "Add Instructor",
+            _("Add Instructor"),
             state="active",
             command=lambda: AddUpdateInstructor(self.db),
         ).grid(row=3, column=1, sticky="w", pady=10)
         createButton(
             toolrow,
-            "Refresh",
+            _("Refresh"),
             command=lambda: self._refresh,
         ).grid(row=3, column=2, sticky="w")
 
-        columns = ["ID", "NAME", "EMAIL", "PHONE", "JOINED AT", "RATE"]
+        columns = [
+            _("ID"),
+            _("NAME"),
+            _("EMAIL"),
+            _("PHONE"),
+            _("JOINED AT"),
+            _("RATE"),
+        ]
         self.tree = tk.ttk.Treeview(self, columns=columns, show="headings")
         for column in columns:
             self.tree.heading(column, text=column, anchor="center")
@@ -138,9 +144,8 @@ class InstructorView(tk.Frame):
             instructor_id = values[0]
             # deleting the selected instructor
             res = self.db.delete(
-                (instructor_id,)(
-                    "id",
-                ),
+                (instructor_id,),
+                ("id",),
                 table_name=TABLENAME.INSTRUCTORS.value,
             )
             if res:

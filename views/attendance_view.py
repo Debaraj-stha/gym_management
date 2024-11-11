@@ -1,5 +1,7 @@
 import tkinter as tk
 from datetime import datetime
+
+
 from tkinter.ttk import Checkbutton, Frame
 from utils.helper import focusIn, focusOut
 from utils.logger import logger
@@ -58,32 +60,35 @@ class AttendanceView(tk.Frame):
         self.grid_columnconfigure(4, weight=1)
         backButton(self, self._controller).grid(row=0, column=0, sticky="ew")
         today = datetime.today()
-        createLabel(toolrow, f'Today:{today.strftime("%Y-%m-%d")}').grid(
+        createLabel(toolrow, _(f'Today:{today.strftime("%Y-%m-%d")}')).grid(
             row=1, column=1, sticky="w"
         )
+        placeholder = _("Search here...")
         self.search_entry = tk.Entry(toolrow)
         self.search_entry.grid(row=1, column=2, sticky="ew")
-        self.search_entry.insert(0, "Search here...")
+        self.search_entry.insert(0, placeholder)
         # bindinf events
         self.search_entry.bind("<FocusIn>", lambda event: focusIn(event))
 
-        self.search_entry.bind(
-            "<FocusOut>", lambda event: focusOut(event, "Search here...")
-        )
+        self.search_entry.bind("<FocusOut>", lambda event: focusOut(event, placeholder))
         self.search_entry.bind_all(("<KeyRelease>"), self._search)
 
         self.customers_frame = Frame(self)
         self.customers_frame.grid(row=2, column=1, sticky="nsew")
         self._config_gridcolumn(self.customers_frame)
-        createLabel(self.customers_frame, "Id").grid(row=1, column=1, sticky="nsew")
-        createLabel(self.customers_frame, "Name").grid(row=1, column=2, sticky="nsew")
-        createLabel(self.customers_frame, "Check in").grid(
+        createLabel(self.customers_frame, _("Id")).grid(row=1, column=1, sticky="nsew")
+        createLabel(self.customers_frame, _("Name")).grid(
+            row=1, column=2, sticky="nsew"
+        )
+        createLabel(self.customers_frame, _("Check in")).grid(
             row=1, column=3, sticky="nsew"
         )
-        createLabel(self.customers_frame, "Check out").grid(
+        createLabel(self.customers_frame, _("Check out")).grid(
             row=1, column=4, sticky="nsew"
         )
-        createLabel(self.customers_frame, "Action").grid(row=1, column=5, sticky="nsew")
+        createLabel(self.customers_frame, _("Action")).grid(
+            row=1, column=5, sticky="nsew"
+        )
 
         self._display_customers()
         self.row_frame = tk.Frame(self)
@@ -214,7 +219,6 @@ class AttendanceView(tk.Frame):
             values = (check_in, customer_id)
             res = self._db.insert(values, col, table_name)
             # debugging result
-            print(res)
             if res is None:
                 return
             # updating checkin checkobox state
@@ -243,7 +247,6 @@ class AttendanceView(tk.Frame):
             )[0][0]
 
             # Debugging output
-            print("Attendance ID:", attendance_id)
             if attendance_id is None:
                 return
             check_out = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -257,7 +260,6 @@ class AttendanceView(tk.Frame):
             )
 
             # debugging result
-            print(res)
             if res is None:
                 return
 

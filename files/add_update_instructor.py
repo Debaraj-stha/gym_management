@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
+
 from utils.constraints import TABLENAME
 from utils.widgets import createButton
 
@@ -9,7 +10,9 @@ class AddUpdateInstructor(tk.Toplevel):
     def __init__(self, db, instructor=None):
         super().__init__()
         self.title(
-            "Add/Update Instructor" if instructor is not None else "Add Instructor"
+            _("Add/Update Instructor")
+            if instructor is not None
+            else _("Add Instructor")
         )
         self.geometry("311x311")
         self.config(padx=11, pady=11)
@@ -43,28 +46,28 @@ class AddUpdateInstructor(tk.Toplevel):
             self.grid_rowconfigure(i, weight=1)
 
     def create_widgets(self):
-        name_label = tk.Label(self, text="Name:")
+        name_label = tk.Label(self, text=_("Name:"))
         name_label.grid(row=1, column=1, sticky="w", pady=10)
         name_entry = tk.Entry(self, textvariable=self.name_var)
         name_entry.grid(row=1, column=2, pady=10)
 
-        email_label = tk.Label(self, text="Email:")
+        email_label = tk.Label(self, text=_("Email:"))
         email_label.grid(row=2, column=1, sticky="w", pady=10)
         email_entry = tk.Entry(self, textvariable=self.email_var)
         email_entry.grid(row=2, column=2, pady=10)
 
-        phone_label = tk.Label(self, text="Phone:")
+        phone_label = tk.Label(self, text=_("Phone:"))
         phone_label.grid(row=3, column=1, sticky="w", pady=10)
         phone_entry = tk.Entry(self, textvariable=self.phone_var)
         phone_entry.grid(row=3, column=2, pady=10)
 
-        rate_label = tk.Label(self, text="Rate:")
+        rate_label = tk.Label(self, text=_("Rate:"))
         rate_label.grid(row=4, column=1, sticky="w", pady=10)
         rate_entry = tk.Entry(self, textvariable=self.rate_var)
         rate_entry.grid(row=4, column=2, pady=10)
         self.rate_var.set("4000")
 
-        save_button = createButton(self, text="Save", command=self.save_instructor)
+        save_button = createButton(self, text=_("Save"), command=self.save_instructor)
         save_button.grid(row=6, column=1, columnspan=2, pady=11)
 
     def save_instructor(self):
